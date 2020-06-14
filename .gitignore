@@ -13,3 +13,11 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# macOS FS
+.DS_Store
+
+# JetBrains
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
