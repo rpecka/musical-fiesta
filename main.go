@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
+	"fiesta/library"
 	"fiesta/settings"
-	"fmt"
-
 	"github.com/desertbit/grumble"
 )
 
@@ -23,14 +23,26 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(config.LibraryPath())
+	libPath, err := config.LibraryPath()
+	if err != nil {
+		panic(err)
+	}
+
+	lib, err := library.InitializeLibrary(libPath)
+	if err != nil {
+		panic(err)
+	}
 
 	app.AddCommand(&grumble.Command{
 		Name: "import",
 		Help: "import a track",
+		Usage: "import [path]",
+		AllowArgs: true,
 		Run: func(c *grumble.Context) error {
-			c.App.Println("Not implemented")
-			return nil
+			if len(c.Args) != 1 {
+				return errors.New("incorrect number of arguments passed. import expects one argument")
+			}
+			return lib.Import(c.Args[0])
 		},
 	})
 

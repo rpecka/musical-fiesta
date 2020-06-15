@@ -3,6 +3,7 @@ package settings
 import (
 	"bufio"
 	"encoding/json"
+	"fiesta/util"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"io/ioutil"
@@ -36,14 +37,14 @@ type settingsFile struct {
 }
 
 func InitializeSettings() (Settings, error) {
-	if !exists(settingsDirPath) {
+	if !util.Exists(settingsDirPath) {
 		err := os.Mkdir(settingsDirPath, 0755)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if !exists(settingsFilePath) {
+	if !util.Exists(settingsFilePath) {
 		file, err := os.Create(settingsFilePath)
 		if err != nil {
 			return nil, err
@@ -112,17 +113,6 @@ func (s realSettings) LibraryPath() (string, error) {
 		return "", err
 	}
 	return *settings.LibraryPath, nil
-}
-
-func exists(path string) bool {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-	if os.IsNotExist(err) {
-		return false
-	}
-	return false
 }
 
 func forceUserHomeDir() string {
