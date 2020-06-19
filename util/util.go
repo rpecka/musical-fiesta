@@ -20,3 +20,15 @@ func Exists(path string) bool {
 func RemoveFileExtension(basename string) string {
 	return strings.TrimSuffix(basename, filepath.Ext(basename))
 }
+
+func Unique(slice []string) []string {
+	uniqueMap := make(map[string]bool)
+	var uniqueSlice []string
+	for _, entry := range slice {
+		if _, value := uniqueMap[entry]; !value {
+			uniqueMap[entry] = true
+			uniqueSlice = append(uniqueSlice, entry)
+		}
+	}
+	return uniqueSlice
+}

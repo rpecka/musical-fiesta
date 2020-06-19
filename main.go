@@ -7,6 +7,7 @@ import (
 	"fiesta/settings"
 	"fmt"
 	"github.com/desertbit/grumble"
+	"strings"
 )
 
 func main() {
@@ -65,7 +66,7 @@ func main() {
 			}
 			output := ""
 			for index, track := range tracks {
-				output += fmt.Sprintf("%v: %v\n", index + 1, track.Name)
+				output += fmt.Sprintf("%v: %v\t%v\n", index + 1, track.Name, "[" + strings.Join(track.Tags, ", ") + "]")
 			}
 			_, _ = c.App.Printf(output)
 			return nil

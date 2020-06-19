@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 const (
@@ -122,6 +123,16 @@ func (l realLibrary) insertTrack(t track) error {
 	return err
 }
 
+func (l realLibrary) generateTagsFromFilename(trackFilename string) []string {
+	trimmed := strings.TrimSpace(trackFilename)
+	words := strings.Split(trimmed, " ")
+	for index, word := range words {
+		words[index] = strings.ToLower(word)
+	}
+	uniqueWords := util.Unique(words)
+	return uniqueWords
+}
+
 func (l *realLibrary) Tracks() ([]track, error) {
 	libFile, err := l.readLibraryFile()
 	if err != nil {
@@ -146,10 +157,12 @@ func (l *realLibrary) Import(trackPath string) error {
 		return err
 	}
 
+	tags := l.generateTagsFromFilename(inputFileName)
+
 	track := track{
 		Name: inputFileName,
 		Path: outputFilePath,
-		Tags: nil,
+		Tags: tags,
 	}
 
 	err = l.insertTrack(track)
