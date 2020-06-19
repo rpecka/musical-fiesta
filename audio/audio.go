@@ -1,16 +1,13 @@
 package audio
 
 import (
+	"fiesta/crossplatform"
 	"fmt"
 	"os/exec"
-	"runtime"
 	"strings"
 )
 
 const (
-	windowsPlatformName = "windows"
-	windowsWhereCommand = "where"
-	whichCommand = "which"
 	ffmpegExecutableName = "ffmpeg"
 
 	mapMetadata = "-map_metadata"
@@ -31,15 +28,7 @@ type ffmpegAudioManipulator struct {
 }
 
 func InitializeAudioManipulator() (Manipulator, error) {
-	platform := runtime.GOOS
-	var findCommand string
-	switch platform {
-	case windowsPlatformName:
-		findCommand += windowsWhereCommand
-	default:
-		findCommand += whichCommand
-	}
-
+	findCommand := crossplatform.WhichCommand
 	output, err := exec.Command(findCommand, ffmpegExecutableName).Output()
 	if err != nil {
 		return nil, err

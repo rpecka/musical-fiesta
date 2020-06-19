@@ -41,3 +41,11 @@ func Filter(ss []string, test func(string) bool) (ret []string) {
 	}
 	return
 }
+
+func UserHomeDir() string {
+	dir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	return dir
+}

@@ -3,6 +3,7 @@ package settings
 import (
 	"bufio"
 	"encoding/json"
+	"fiesta/crossplatform"
 	"fiesta/util"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
@@ -19,7 +20,7 @@ const (
 )
 
 var (
-	settingsDirPath  = filepath.Join(forceUserHomeDir(), settingsDirName)
+	settingsDirPath  = filepath.Join(util.UserHomeDir(), settingsDirName)
 	settingsFilePath = filepath.Join(settingsDirPath, settingsFileName)
 )
 
@@ -34,6 +35,7 @@ type realSettings struct {
 
 type settingsFile struct {
 	LibraryPath *string `json:"libraryPath,omitempty"`
+	UserdataDir *string `json:"userdataDir,omitempty"`
 }
 
 func InitializeSettings() (Settings, error) {
@@ -80,6 +82,28 @@ func InitializeSettings() (Settings, error) {
 		}
 	}
 
+	if settingsFile.UserdataDir == nil {
+		reader := bufio.NewReader(os.Stdin)
+		defaultDir := crossplatform.DefaultUserdataDir()
+		fmt.Print("Please provide the path to your Steam userdata directory. Press return to use the default " +
+			"("+defaultDir+"): ")
+		path, err := reader.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
+		cleanPath := strings.TrimSpace(path)
+		userdataPath, _ := homedir.Expand(cleanPath)
+		if userdataPath == "" {
+			settingsFile.UserdataDir = &defaultDir
+		} else {
+			settingsFile.UserdataDir = &userdataPath
+		}
+		err = settings.writeSettings(settingsFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return settings, nil
 }
 
@@ -113,12 +137,4 @@ func (s realSettings) LibraryPath() (string, error) {
 		return "", err
 	}
 	return *settings.LibraryPath, nil
-}
-
-func forceUserHomeDir() string {
-	dir, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	return dir
 }
