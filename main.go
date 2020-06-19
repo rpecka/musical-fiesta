@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fiesta/audio"
+	"fiesta/configwatcher"
 	"fiesta/library"
 	"fiesta/settings"
 	"fmt"
 	"github.com/desertbit/grumble"
+	"os"
 	"strings"
 )
 
@@ -42,9 +45,9 @@ func main() {
 	}
 
 	app.AddCommand(&grumble.Command{
-		Name: "import",
-		Help: "import a track",
-		Usage: "import [path]",
+		Name:      "import",
+		Help:      "import a track",
+		Usage:     "import [path]",
 		AllowArgs: true,
 		Run: func(c *grumble.Context) error {
 			if len(c.Args) != 1 {
@@ -55,9 +58,9 @@ func main() {
 	})
 
 	app.AddCommand(&grumble.Command{
-		Name: "list",
-		Help: "list tracks",
-		Usage: "list",
+		Name:      "list",
+		Help:      "list tracks",
+		Usage:     "list",
 		AllowArgs: false,
 		Run: func(c *grumble.Context) error {
 			tracks, err := lib.Tracks()
@@ -66,9 +69,42 @@ func main() {
 			}
 			output := ""
 			for index, track := range tracks {
-				output += fmt.Sprintf("%v: %v\t%v\n", index + 1, track.Name, "[" + strings.Join(track.Tags, ", ") + "]")
+				output += fmt.Sprintf("%v: %v\t%v\n", index+1, track.Name, "["+strings.Join(track.Tags, ", ")+"]")
 			}
 			_, _ = c.App.Printf(output)
+			return nil
+		},
+	})
+
+	app.AddCommand(&grumble.Command{
+		Name:      "start",
+		Help:      "start listening for commands from CSGO",
+		Usage:     "start",
+		AllowArgs: false,
+		Run: func(c *grumble.Context) error {
+			started := make(chan error)
+			fileChanged := make(chan bool)
+			stop := make(chan bool)
+			go func() {
+				configwatcher.Start("/Users/rpecka/Desktop/test.txt", started, fileChanged, stop)
+			}()
+			err := <-started
+			if err != nil {
+				return fmt.Errorf("failed to start config watcher: %v", err)
+			}
+			go func() {
+				for _ = range fileChanged {
+					// Do something when the file changes
+				}
+			}()
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Print("Press return to exit…")
+			_, err = reader.ReadString('\n')
+			if err != nil {
+				stop <- true
+				return err
+			}
+			stop <- true
 			return nil
 		},
 	})
