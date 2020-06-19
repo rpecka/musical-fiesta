@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fiesta/audio"
+	"fiesta/csgo/commands"
 	"fiesta/util"
 	"io/ioutil"
 	"os"
@@ -158,11 +159,14 @@ func (l *realLibrary) Import(trackPath string) error {
 	}
 
 	tags := l.generateTagsFromFilename(inputFileName)
+	legalTags := util.Filter(tags, func(s string) bool {
+		return !commands.IsIllegal(s)
+	})
 
 	track := track{
 		Name: inputFileName,
 		Path: outputFilePath,
-		Tags: tags,
+		Tags: legalTags,
 	}
 
 	err = l.insertTrack(track)
