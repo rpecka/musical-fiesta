@@ -26,6 +26,7 @@ type libraryFile struct {
 }
 
 type Library interface {
+	Tracks() ([]track, error)
 	Import(trackPath string) error
 }
 
@@ -119,6 +120,14 @@ func (l realLibrary) insertTrack(t track) error {
 
 	err = l.writeLibraryFile(*libFile)
 	return err
+}
+
+func (l *realLibrary) Tracks() ([]track, error) {
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return nil, err
+	}
+	return libFile.Tracks, nil
 }
 
 func (l *realLibrary) Import(trackPath string) error {
