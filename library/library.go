@@ -3,6 +3,7 @@ package library
 import (
 	"encoding/json"
 	"errors"
+	"fiesta/audio"
 	"fiesta/util"
 	"io/ioutil"
 	"os"
@@ -17,6 +18,7 @@ const (
 
 type realLibrary struct {
 	path string
+	manipulator audio.Manipulator
 }
 
 type libraryFile struct {
@@ -27,13 +29,14 @@ type Library interface {
 	Import(trackPath string) error
 }
 
-func InitializeLibrary(libraryDir string) (Library, error) {
+func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
 	if !util.Exists(libraryDir) {
 		return nil, errors.New("Library directory: " + libraryDir + " does not exist")
 	}
 
 	lib := realLibrary{
 		path: libraryDir,
+		manipulator: manipulator,
 	}
 
 	libraryFilePath := lib.libraryFilePath()
@@ -129,7 +132,10 @@ func (l *realLibrary) Import(trackPath string) error {
 		return errors.New("Could not import track to destination: " + outputFilePath + " because a file already exists at that location")
 	}
 
-	// generate file here
+	err := l.manipulator.ConvertToWav(trackPath, outputFilePath)
+	if err != nil {
+		return err
+	}
 
 	track := track{
 		Name: inputFileName,
@@ -137,7 +143,7 @@ func (l *realLibrary) Import(trackPath string) error {
 		Tags: nil,
 	}
 
-	err := l.insertTrack(track)
+	err = l.insertTrack(track)
 	if err != nil {
 		return err
 	}

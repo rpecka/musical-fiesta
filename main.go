@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fiesta/audio"
 	"fiesta/library"
 	"fiesta/settings"
 	"github.com/desertbit/grumble"
@@ -28,7 +29,12 @@ func main() {
 		panic(err)
 	}
 
-	lib, err := library.InitializeLibrary(libPath)
+	manipulator, err := audio.InitializeAudioManipulator()
+	if err != nil {
+		panic(err)
+	}
+
+	lib, err := library.InitializeLibrary(libPath, manipulator)
 	if err != nil {
 		panic(err)
 	}
