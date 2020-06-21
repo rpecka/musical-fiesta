@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"errors"
 	"fiesta/audio"
-	"fiesta/configwatcher"
+	"fiesta/csgo/configfile"
 	"fiesta/library"
+	"fiesta/loader"
 	"fiesta/settings"
 	"fmt"
 	"github.com/desertbit/grumble"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -82,21 +84,15 @@ func main() {
 		Usage:     "start",
 		AllowArgs: false,
 		Run: func(c *grumble.Context) error {
-			started := make(chan error)
-			fileChanged := make(chan bool)
 			stop := make(chan bool)
-			go func() {
-				configwatcher.Start("/Users/rpecka/Desktop/test.txt", started, fileChanged, stop)
-			}()
-			err := <-started
+			userdataDir, err := config.UserdataDirPath()
 			if err != nil {
-				return fmt.Errorf("failed to start config watcher: %v", err)
+				return err
 			}
-			go func() {
-				for _ = range fileChanged {
-					// Do something when the file changes
-				}
-			}()
+			err = loader.Start(filepath.Join(userdataDir, configfile.RelayFileName), "z", stop)
+			if err != nil {
+				return err
+			}
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Print("Press return to exit…")
 			_, err = reader.ReadString('\n')

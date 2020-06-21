@@ -14,12 +14,12 @@ import (
 )
 
 const (
-	libraryFileName = "library.json"
+	libraryFileName      = "library.json"
 	libraryTracksDirName = "tracks"
 )
 
 type realLibrary struct {
-	path string
+	path        string
 	manipulator audio.Manipulator
 }
 
@@ -38,7 +38,7 @@ func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Librar
 	}
 
 	lib := realLibrary{
-		path: libraryDir,
+		path:        libraryDir,
 		manipulator: manipulator,
 	}
 

@@ -26,6 +26,7 @@ var (
 
 type Settings interface {
 	LibraryPath() (string, error)
+	UserdataDirPath() (string, error)
 }
 
 // Settings : Object to manage the configuration for the app
@@ -86,7 +87,7 @@ func InitializeSettings() (Settings, error) {
 		reader := bufio.NewReader(os.Stdin)
 		defaultDir := crossplatform.DefaultUserdataDir()
 		fmt.Print("Please provide the path to your Steam userdata directory. Press return to use the default " +
-			"("+defaultDir+"): ")
+			"(" + defaultDir + "): ")
 		path, err := reader.ReadString('\n')
 		if err != nil {
 			return nil, err
@@ -137,4 +138,12 @@ func (s realSettings) LibraryPath() (string, error) {
 		return "", err
 	}
 	return *settings.LibraryPath, nil
+}
+
+func (s realSettings) UserdataDirPath() (string, error) {
+	settings, err := s.parseSettings()
+	if err != nil {
+		return "", err
+	}
+	return *settings.UserdataDir, nil
 }

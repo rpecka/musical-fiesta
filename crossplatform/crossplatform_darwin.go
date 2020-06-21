@@ -1,4 +1,3 @@
-
 // +build darwin
 
 package crossplatform
@@ -13,7 +12,7 @@ const (
 )
 
 var (
-	defaultSteamDir = filepath.Join(util.UserHomeDir(), "Library", "Application Support", "Steam")
+	defaultSteamDir    = filepath.Join(util.UserHomeDir(), "Library", "Application Support", "Steam")
 	defaultUserdataDir = filepath.Join(defaultSteamDir, "userdata")
 )
 

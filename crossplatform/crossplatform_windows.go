@@ -1,4 +1,3 @@
-
 // +build windows
 
 package crossplatform
@@ -12,6 +11,6 @@ const (
 )
 
 var (
-	steamDir = filepath.Join("C:\\", "Program Files (x86)", "Steam")
+	steamDir    = filepath.Join("C:\\", "Program Files (x86)", "Steam")
 	userdataDir = filepath.Join(windowsSteamDir, "userdata")
 )

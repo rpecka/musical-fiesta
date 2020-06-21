@@ -10,13 +10,13 @@ import (
 const (
 	ffmpegExecutableName = "ffmpeg"
 
-	mapMetadata = "-map_metadata"
-	bitexact = "-bitexact"
-	audioQuality = "-aq"
-	sampleRate = "-ar"
+	mapMetadata   = "-map_metadata"
+	bitexact      = "-bitexact"
+	audioQuality  = "-aq"
+	sampleRate    = "-ar"
 	audioChannels = "-ac"
-	audioCodec = "-acodec"
-	pcmS16le = "pcm_s16le"
+	audioCodec    = "-acodec"
+	pcmS16le      = "pcm_s16le"
 )
 
 type Manipulator interface {
