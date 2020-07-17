@@ -6,6 +6,7 @@ import (
 	"fiesta/audio"
 	"fiesta/csgo/commands"
 	"fiesta/util"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -30,6 +31,7 @@ type libraryFile struct {
 type Library interface {
 	Tracks() ([]track, error)
 	Import(trackPath string) error
+	ImportDir(trackDirPath string) (failures []string, err error)
 }
 
 func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
@@ -174,4 +176,26 @@ func (l *realLibrary) Import(trackPath string) error {
 		return err
 	}
 	return nil
+}
+
+func (l *realLibrary) ImportDir(trackDirPath string) (failures []string, err error) {
+	if !util.Exists(l.tracksDirPath()) {
+		return nil, errors.New("the path: `" + trackDirPath + "` does not exist")
+	}
+	contents, err := ioutil.ReadDir(trackDirPath)
+	if err != nil {
+		return nil, fmt.Errorf("could not import directory of tracks because: %v", err)
+	}
+	failures = make([]string, 0)
+	for _, file := range contents {
+		if file.IsDir() {
+			continue
+		}
+		trackPath := filepath.Join(trackDirPath, file.Name())
+		err = l.Import(trackPath)
+		if err != nil {
+			failures = append(failures, trackPath)
+		}
+	}
+	return failures, nil
 }

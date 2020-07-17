@@ -15,6 +15,10 @@ import (
 	"strings"
 )
 
+const (
+	directoryFlag = "directory"
+)
+
 func main() {
 	var app = grumble.New(&grumble.Config{
 		Name:        "fiesta",
@@ -49,13 +53,33 @@ func main() {
 	app.AddCommand(&grumble.Command{
 		Name:      "import",
 		Help:      "import a track",
-		Usage:     "import [path]",
+		Usage:     "import [path]\n" +
+			"\tor: -d [directory-path]",
 		AllowArgs: true,
+		Flags: func(f *grumble.Flags) {
+			f.Bool("d", directoryFlag, false, "import a directory of tracks")
+		},
 		Run: func(c *grumble.Context) error {
 			if len(c.Args) != 1 {
 				return errors.New("incorrect number of arguments passed. import expects one argument")
 			}
-			return lib.Import(c.Args[0])
+			path := c.Args[0]
+			if c.Flags.Bool(directoryFlag) {
+				failures, err := lib.ImportDir(path)
+				if err != nil {
+					return err
+				}
+				if len(failures) > 0 {
+					_, _ = c.App.Println("Failures:")
+					for _, failure := range failures {
+						_, _ = c.App.Println("\t" + failure)
+					}
+				}
+				return nil
+			} else {
+				return lib.Import(path)
+			}
+
 		},
 	})
 
