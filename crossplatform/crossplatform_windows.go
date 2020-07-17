@@ -11,6 +11,10 @@ const (
 )
 
 var (
-	steamDir    = filepath.Join("C:\\", "Program Files (x86)", "Steam")
-	userdataDir = filepath.Join(windowsSteamDir, "userdata")
+	defaultSteamDir    = filepath.Join("C:\\", "Program Files (x86)", "Steam")
+	defaultUserdataDir = filepath.Join(defaultSteamDir, "userdata")
 )
+
+func DefaultUserdataDir() string {
+	return defaultUserdataDir
+}
