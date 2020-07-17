@@ -102,7 +102,7 @@ func (l realLibrary) readLibraryFile() (*libraryFile, error) {
 }
 
 func (l realLibrary) writeLibraryFile(libFile libraryFile) error {
-	data, err := json.Marshal(libFile)
+	data, err := json.MarshalIndent(libFile, "", "    ")
 	if err != nil {
 		return err
 	}
