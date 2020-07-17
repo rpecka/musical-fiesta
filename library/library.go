@@ -32,6 +32,7 @@ type Library interface {
 	Tracks() ([]track, error)
 	Import(trackPath string) error
 	ImportDir(trackDirPath string) (failures []string, err error)
+	DeleteTrack(trackNumber int) error
 }
 
 func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
@@ -198,4 +199,28 @@ func (l *realLibrary) ImportDir(trackDirPath string) (failures []string, err err
 		}
 	}
 	return failures, nil
+}
+
+func (l *realLibrary) DeleteTrack(trackNumber int) error {
+	if trackNumber < 0 {
+		return errors.New("track index must be greater than zero: " + string(trackNumber))
+	}
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return err
+	}
+	if trackNumber > len(libFile.Tracks) {
+		return errors.New("track index is out of bounds: " + string(trackNumber))
+	}
+	trackIndex := trackNumber - 1
+	trackPath := libFile.Tracks[trackIndex].Path
+
+	libFile.Tracks = append(libFile.Tracks[:trackIndex], libFile.Tracks[trackIndex+1:]...)
+	err = l.writeLibraryFile(*libFile)
+
+	err = os.Remove(trackPath)
+	if err != nil {
+		// TODO: Need some kind of logging for this but it seems non-fatal to me
+	}
+	return err
 }

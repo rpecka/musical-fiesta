@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fiesta/audio"
+	"fiesta/commands"
 	"fiesta/csgo/configfile"
 	"fiesta/library"
 	"fiesta/loader"
@@ -128,6 +129,8 @@ func main() {
 			return nil
 		},
 	})
+
+	commands.SetUpCommands(app, lib)
 
 	grumble.Main(app)
 }
