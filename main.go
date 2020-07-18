@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fiesta/audio"
 	"fiesta/commands"
+	"fiesta/csgo"
 	"fiesta/csgo/configfile"
 	"fiesta/library"
 	"fiesta/loader"
@@ -52,9 +53,9 @@ func main() {
 	}
 
 	app.AddCommand(&grumble.Command{
-		Name:      "import",
-		Help:      "import a track",
-		Usage:     "import [path]\n" +
+		Name: "import",
+		Help: "import a track",
+		Usage: "import [path]\n" +
 			"\tor: -d [directory-path]",
 		AllowArgs: true,
 		Flags: func(f *grumble.Flags) {
@@ -114,7 +115,12 @@ func main() {
 			if err != nil {
 				return err
 			}
-			err = loader.Start(filepath.Join(userdataDir, configfile.RelayFileName), "z", stop)
+			csgoDir, err := config.CSGODirPath()
+			if err != nil {
+				return err
+			}
+			destination := filepath.Join(csgoDir, csgo.VoiceInputFileName)
+			err = loader.Start(filepath.Join(userdataDir, configfile.RelayFileName), "z", stop, destination, lib)
 			if err != nil {
 				return err
 			}
