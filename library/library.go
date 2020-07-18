@@ -30,6 +30,7 @@ type libraryFile struct {
 
 type Library interface {
 	Tracks() ([]track, error)
+	GetTrack(trackNumber int) (*track, error)
 	Import(trackPath string) error
 	ImportDir(trackDirPath string) (failures []string, err error)
 	DeleteTrack(trackNumber int) error
@@ -137,12 +138,39 @@ func (l realLibrary) generateTagsFromFilename(trackFilename string) []string {
 	return uniqueWords
 }
 
+func trackNumberToIndex(trackNumber int) int {
+	return trackNumber - 1
+}
+
+func validateTrackNumber(trackNumber int, libFile libraryFile) error {
+	if trackNumber <= 0 {
+		return errors.New("track number must be greater than zero")
+	}
+	if trackNumber > len(libFile.Tracks) {
+		return errors.New("track number is out of bounds: " + string(len(libFile.Tracks)))
+	}
+	return nil
+}
+
 func (l *realLibrary) Tracks() ([]track, error) {
 	libFile, err := l.readLibraryFile()
 	if err != nil {
 		return nil, err
 	}
 	return libFile.Tracks, nil
+}
+
+func (l *realLibrary) GetTrack(trackNumber int) (*track, error) {
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return nil, err
+	}
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return nil, err
+	}
+	trackIndex := trackNumberToIndex(trackNumber)
+	return &libFile.Tracks[trackIndex], nil
 }
 
 func (l *realLibrary) Import(trackPath string) error {
@@ -202,17 +230,15 @@ func (l *realLibrary) ImportDir(trackDirPath string) (failures []string, err err
 }
 
 func (l *realLibrary) DeleteTrack(trackNumber int) error {
-	if trackNumber < 0 {
-		return errors.New("track index must be greater than zero: " + string(trackNumber))
-	}
 	libFile, err := l.readLibraryFile()
 	if err != nil {
 		return err
 	}
-	if trackNumber > len(libFile.Tracks) {
-		return errors.New("track index is out of bounds: " + string(trackNumber))
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return err
 	}
-	trackIndex := trackNumber - 1
+	trackIndex := trackNumberToIndex(trackNumber)
 	trackPath := libFile.Tracks[trackIndex].Path
 
 	libFile.Tracks = append(libFile.Tracks[:trackIndex], libFile.Tracks[trackIndex+1:]...)

@@ -27,6 +27,7 @@ var (
 type Settings interface {
 	LibraryPath() (string, error)
 	UserdataDirPath() (string, error)
+	CSGODirPath() (string, error)
 }
 
 // Settings : Object to manage the configuration for the app
@@ -37,6 +38,7 @@ type realSettings struct {
 type settingsFile struct {
 	LibraryPath *string `json:"libraryPath,omitempty"`
 	UserdataDir *string `json:"userdataDir,omitempty"`
+	CSGODir     *string `json:"CSGODir,omitempty"`
 }
 
 func InitializeSettings() (Settings, error) {
@@ -105,6 +107,28 @@ func InitializeSettings() (Settings, error) {
 		}
 	}
 
+	if settingsFile.CSGODir == nil {
+		reader := bufio.NewReader(os.Stdin)
+		defaultDir := crossplatform.DefaultCSGODir()
+		fmt.Print("Please provide the path to your CSGO game files directory. Press return to use the default " +
+			"(" + defaultDir + "): ")
+		path, err := reader.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
+		cleanPath := strings.TrimSpace(path)
+		csgoPath, _ := homedir.Expand(cleanPath)
+		if csgoPath == "" {
+			settingsFile.CSGODir = &defaultDir
+		} else {
+			settingsFile.CSGODir = &csgoPath
+		}
+		err = settings.writeSettings(settingsFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return settings, nil
 }
 
@@ -146,4 +170,12 @@ func (s realSettings) UserdataDirPath() (string, error) {
 		return "", err
 	}
 	return *settings.UserdataDir, nil
+}
+
+func (s realSettings) CSGODirPath() (string, error) {
+	settings, err := s.parseSettings()
+	if err != nil {
+		return "", err
+	}
+	return *settings.CSGODir, nil
 }
