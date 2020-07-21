@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fiesta/src/audio"
-	"fiesta/src/csgo/commands"
 	"fiesta/src/util"
 	"fmt"
 	"io/ioutil"
@@ -34,6 +33,7 @@ type Library interface {
 	Import(trackPath string) error
 	ImportDir(trackDirPath string) (failures []string, err error)
 	DeleteTrack(trackNumber int) error
+	AddTag(trackNumber int, tag string) error
 }
 
 func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
@@ -128,16 +128,6 @@ func (l realLibrary) insertTrack(t track) error {
 	return err
 }
 
-func (l realLibrary) generateTagsFromFilename(trackFilename string) []string {
-	trimmed := strings.TrimSpace(trackFilename)
-	words := strings.Split(trimmed, " ")
-	for index, word := range words {
-		words[index] = strings.ToLower(word)
-	}
-	uniqueWords := util.Unique(words)
-	return uniqueWords
-}
-
 func trackNumberToIndex(trackNumber int) int {
 	return trackNumber - 1
 }
@@ -189,15 +179,12 @@ func (l *realLibrary) Import(trackPath string) error {
 		return err
 	}
 
-	tags := l.generateTagsFromFilename(inputFileName)
-	legalTags := util.Filter(tags, func(s string) bool {
-		return !commands.IsIllegal(s)
-	})
+	tags := generateTagsFromFilename(inputFileName)
 
 	track := track{
 		Name: inputFileName,
 		Path: outputFilePath,
-		Tags: legalTags,
+		Tags: tags,
 	}
 
 	err = l.insertTrack(track)
@@ -243,10 +230,39 @@ func (l *realLibrary) DeleteTrack(trackNumber int) error {
 
 	libFile.Tracks = append(libFile.Tracks[:trackIndex], libFile.Tracks[trackIndex+1:]...)
 	err = l.writeLibraryFile(*libFile)
+	if err != nil {
+		return err
+	}
 
 	err = os.Remove(trackPath)
 	if err != nil {
 		// TODO: Need some kind of logging for this but it seems non-fatal to me
 	}
 	return err
+}
+
+func (l *realLibrary) AddTag(trackNumber int, tag string) error {
+	tag = strings.ToLower(tag)
+	if !isValidTag(tag) {
+		return fmt.Errorf("invalid tag: `%s`", tag)
+	}
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return err
+	}
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return err
+	}
+	trackIndex := trackNumberToIndex(trackNumber)
+	track := &libFile.Tracks[trackIndex]
+	if util.Contains(track.Tags, tag) {
+		return fmt.Errorf("the track %s already contains the tag %s", track.Name, tag)
+	}
+	track.Tags = append(track.Tags, tag)
+	err = l.writeLibraryFile(*libFile)
+	if err != nil {
+		return err
+	}
+	return nil
 }
