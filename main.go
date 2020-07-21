@@ -6,7 +6,6 @@ import (
 	"fiesta/audio"
 	"fiesta/commands"
 	"fiesta/csgo"
-	"fiesta/csgo/configfile"
 	"fiesta/library"
 	"fiesta/loader"
 	"fiesta/settings"
@@ -120,7 +119,7 @@ func main() {
 				return err
 			}
 			destination := filepath.Join(csgoDir, csgo.VoiceInputFileName)
-			err = loader.Start(filepath.Join(userdataDir, configfile.RelayFileName), "z", stop, destination, lib)
+			err = loader.Start(userdataDir, "z", stop, destination, lib)
 			if err != nil {
 				return err
 			}
