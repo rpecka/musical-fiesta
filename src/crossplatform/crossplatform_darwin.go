@@ -3,7 +3,7 @@
 package crossplatform
 
 import (
-	"fiesta/util"
+	"fiesta/src/util"
 	"path/filepath"
 )
 

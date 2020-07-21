@@ -2,7 +2,7 @@ package commands
 
 import (
 	"errors"
-	"fiesta/library"
+	"fiesta/src/library"
 	"fmt"
 	"github.com/desertbit/grumble"
 	"strconv"

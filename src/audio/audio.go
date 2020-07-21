@@ -1,7 +1,7 @@
 package audio
 
 import (
-	"fiesta/crossplatform"
+	"fiesta/src/crossplatform"
 	"fmt"
 	"os/exec"
 	"strings"

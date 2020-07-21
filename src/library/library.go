@@ -3,9 +3,9 @@ package library
 import (
 	"encoding/json"
 	"errors"
-	"fiesta/audio"
-	"fiesta/csgo/commands"
-	"fiesta/util"
+	"fiesta/src/audio"
+	"fiesta/src/csgo/commands"
+	"fiesta/src/util"
 	"fmt"
 	"io/ioutil"
 	"os"
