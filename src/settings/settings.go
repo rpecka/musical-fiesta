@@ -3,8 +3,8 @@ package settings
 import (
 	"bufio"
 	"encoding/json"
-	"fiesta/crossplatform"
-	"fiesta/util"
+	"fiesta/src/crossplatform"
+	"fiesta/src/util"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"io/ioutil"

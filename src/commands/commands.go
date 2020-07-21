@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"fiesta/library"
+	"fiesta/src/library"
 	"github.com/desertbit/grumble"
 )
 

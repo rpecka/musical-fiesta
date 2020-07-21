@@ -2,8 +2,8 @@ package configwatcher
 
 import (
 	"errors"
-	"fiesta/csgo"
-	"fiesta/util"
+	"fiesta/src/csgo"
+	"fiesta/src/util"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"io/ioutil"

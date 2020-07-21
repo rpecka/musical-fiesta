@@ -1,10 +1,10 @@
 package loader
 
 import (
-	"fiesta/configwatcher"
-	"fiesta/csgo/configfile"
-	"fiesta/library"
-	"fiesta/util"
+	"fiesta/src/configwatcher"
+	"fiesta/src/csgo/configfile"
+	"fiesta/src/library"
+	"fiesta/src/util"
 	"fmt"
 )
 
