@@ -17,7 +17,7 @@ var (
 )
 
 func IsIllegal(command string) bool {
-	if _, value := blacklist[command]; !value {
+	if _, value := blacklist[command]; value {
 		return true
 	} else {
 		return false
