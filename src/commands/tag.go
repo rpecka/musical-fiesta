@@ -68,7 +68,14 @@ func addTag(app *grumble.App, library library.Library) {
 					return err
 				}
 			} else {  // deleteRequested
-
+				tagNumber, err := strconv.Atoi(deleteInput)
+				if err != nil {
+					return errors.New("tag deleting by name is not currently supported")
+				}
+				err = library.DeleteTag(trackNumber, tagNumber)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		},

@@ -34,6 +34,7 @@ type Library interface {
 	ImportDir(trackDirPath string) (failures []string, err error)
 	DeleteTrack(trackNumber int) error
 	AddTag(trackNumber int, tag string) error
+	DeleteTag(trackNumber int, tagNumber int) error
 }
 
 func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
@@ -132,12 +133,26 @@ func trackNumberToIndex(trackNumber int) int {
 	return trackNumber - 1
 }
 
+func tagNumberToIndex(tagNumber int) int {
+	return tagNumber - 1
+}
+
 func validateTrackNumber(trackNumber int, libFile libraryFile) error {
 	if trackNumber <= 0 {
 		return errors.New("track number must be greater than zero")
 	}
 	if trackNumber > len(libFile.Tracks) {
 		return errors.New("track number is out of bounds: " + string(len(libFile.Tracks)))
+	}
+	return nil
+}
+
+func validateTagNumber(tagNumber int, track track) error {
+	if tagNumber <= 0 {
+		return errors.New("tag number must be greater than zero")
+	}
+	if tagNumber > len(track.Tags) {
+		return fmt.Errorf("track number is out of bounds: %d", len(track.Tags))
 	}
 	return nil
 }
@@ -260,6 +275,30 @@ func (l *realLibrary) AddTag(trackNumber int, tag string) error {
 		return fmt.Errorf("the track %s already contains the tag %s", track.Name, tag)
 	}
 	track.Tags = append(track.Tags, tag)
+	err = l.writeLibraryFile(*libFile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *realLibrary) DeleteTag(trackNumber int, tagNumber int) error {
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return err
+	}
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return err
+	}
+	trackIndex := trackNumberToIndex(trackNumber)
+	track := &libFile.Tracks[trackIndex]
+	err = validateTagNumber(tagNumber, *track)
+	if err != nil {
+		return err
+	}
+	tagIndex := tagNumberToIndex(tagNumber)
+	track.Tags = append(track.Tags[:tagIndex], track.Tags[tagIndex+1:]...)
 	err = l.writeLibraryFile(*libFile)
 	if err != nil {
 		return err
