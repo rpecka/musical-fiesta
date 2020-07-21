@@ -24,6 +24,7 @@ and getting an output like:
 ```
 Note that the output does not need to be exactly the same, it only needs to not show an error.
 If either of these commands fail, you will need to add the directories where you installed those tools to your PATH environment variable.
+
 4. Clone the git repository to your machine and navigate to it in your terminal
 5. run `go run src/main.go`
 6. Musical Fiesta will start automatically. To run again in the future, you can run the executable called `main` that you just created by double-clicking on it.
@@ -37,18 +38,19 @@ $: where go
 ```
 and getting an output like:
 ```
-C:\Program Files (x86)/go/go
+C:\Program Files (x86)\go\go
 ```
 and running
 ```
-$: which ffmpeg
+$: where ffmpeg
 ```
 and getting an output like:
 ```
-C:\Program Files (x86)/ffmepg/ffmpeg
+C:\Program Files (x86)\ffmepg\ffmpeg
 ```
 Note that the output does not need to be exactly the same, it only needs to not show an error.
 If either of these commands fail, you will need to add the directories where you installed those tools to your PATH environment variable. You can do this in Control Panel > System > Advanced System Settings > Environment Variables
+
 4. Clone the git repository to your machine and navigate to it in cmd
-5. Run `go run src/main.go`
+5. Run `go run src\main.go`
 6. Musical Fiesta will start automatically. To run again in the future, you can run the executable called `main` that you just created by double-clicking on it.
