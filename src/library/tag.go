@@ -24,6 +24,9 @@ func generateTagsFromFilename(trackFilename string) []string {
 }
 
 func isValidTag(tag string) bool {
+	if len(tag) < 1 {
+		return false
+	}
 	if strings.ToLower(tag) != tag {
 		return false
 	}

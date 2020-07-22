@@ -142,7 +142,7 @@ func validateTrackNumber(trackNumber int, libFile libraryFile) error {
 		return errors.New("track number must be greater than zero")
 	}
 	if trackNumber > len(libFile.Tracks) {
-		return errors.New("track number is out of bounds: " + string(len(libFile.Tracks)))
+		return fmt.Errorf("track number is out of bounds: %d", len(libFile.Tracks))
 	}
 	return nil
 }

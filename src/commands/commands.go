@@ -7,5 +7,5 @@ import (
 
 func SetUpCommands(app *grumble.App, library library.Library) {
 	addDeleteTrack(app, library)
-	addTag(app, library)
+	addTrack(app, library)
 }
