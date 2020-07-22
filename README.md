@@ -1,6 +1,8 @@
 # Musical Fiesta
 A command line tool for running a CSGO soundboard
 
+![Go](https://github.com/rpecka/musical-fiesta/workflows/Go/badge.svg?branch=master)
+
 # Installation
 A prebuilt version of the tool is not yet available so you will need to build the tool yourself.
 ## macOS
