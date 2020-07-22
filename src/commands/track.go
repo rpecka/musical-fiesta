@@ -21,6 +21,14 @@ func extractTrackNumberArgument(ctx *grumble.Context) (int, error) {
 	return trackNumber, nil
 }
 
+func listTags(app *grumble.App, name string, tags []string) {
+	output := fmt.Sprintf("tags for \"%s\":\n", name)
+	for idx, tag := range tags {
+		output += fmt.Sprintf("\t%d. %s", idx + 1, tag)
+	}
+	app.Printf(output)
+}
+
 func addTrack(app *grumble.App, library library.Library) {
 	trackCommand := grumble.Command{
 		Name:      "track",
