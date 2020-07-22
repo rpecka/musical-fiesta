@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fiesta/src/audio"
-	"fiesta/src/csgo/commands"
 	"fiesta/src/util"
 	"fmt"
 	"io/ioutil"
@@ -34,6 +33,8 @@ type Library interface {
 	Import(trackPath string) error
 	ImportDir(trackDirPath string) (failures []string, err error)
 	DeleteTrack(trackNumber int) error
+	AddTag(trackNumber int, tag string) error
+	DeleteTag(trackNumber int, tagNumber int) error
 }
 
 func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
@@ -128,18 +129,12 @@ func (l realLibrary) insertTrack(t track) error {
 	return err
 }
 
-func (l realLibrary) generateTagsFromFilename(trackFilename string) []string {
-	trimmed := strings.TrimSpace(trackFilename)
-	words := strings.Split(trimmed, " ")
-	for index, word := range words {
-		words[index] = strings.ToLower(word)
-	}
-	uniqueWords := util.Unique(words)
-	return uniqueWords
-}
-
 func trackNumberToIndex(trackNumber int) int {
 	return trackNumber - 1
+}
+
+func tagNumberToIndex(tagNumber int) int {
+	return tagNumber - 1
 }
 
 func validateTrackNumber(trackNumber int, libFile libraryFile) error {
@@ -147,7 +142,17 @@ func validateTrackNumber(trackNumber int, libFile libraryFile) error {
 		return errors.New("track number must be greater than zero")
 	}
 	if trackNumber > len(libFile.Tracks) {
-		return errors.New("track number is out of bounds: " + string(len(libFile.Tracks)))
+		return fmt.Errorf("track number is out of bounds: %d", len(libFile.Tracks))
+	}
+	return nil
+}
+
+func validateTagNumber(tagNumber int, track track) error {
+	if tagNumber <= 0 {
+		return errors.New("tag number must be greater than zero")
+	}
+	if tagNumber > len(track.Tags) {
+		return fmt.Errorf("track number is out of bounds: %d", len(track.Tags))
 	}
 	return nil
 }
@@ -189,15 +194,12 @@ func (l *realLibrary) Import(trackPath string) error {
 		return err
 	}
 
-	tags := l.generateTagsFromFilename(inputFileName)
-	legalTags := util.Filter(tags, func(s string) bool {
-		return !commands.IsIllegal(s)
-	})
+	tags := generateTagsFromFilename(inputFileName)
 
 	track := track{
 		Name: inputFileName,
 		Path: outputFilePath,
-		Tags: legalTags,
+		Tags: tags,
 	}
 
 	err = l.insertTrack(track)
@@ -243,10 +245,63 @@ func (l *realLibrary) DeleteTrack(trackNumber int) error {
 
 	libFile.Tracks = append(libFile.Tracks[:trackIndex], libFile.Tracks[trackIndex+1:]...)
 	err = l.writeLibraryFile(*libFile)
+	if err != nil {
+		return err
+	}
 
 	err = os.Remove(trackPath)
 	if err != nil {
 		// TODO: Need some kind of logging for this but it seems non-fatal to me
 	}
 	return err
+}
+
+func (l *realLibrary) AddTag(trackNumber int, tag string) error {
+	tag = strings.ToLower(tag)
+	if !isValidTag(tag) {
+		return fmt.Errorf("invalid tag: `%s`", tag)
+	}
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return err
+	}
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return err
+	}
+	trackIndex := trackNumberToIndex(trackNumber)
+	track := &libFile.Tracks[trackIndex]
+	if util.Contains(track.Tags, tag) {
+		return fmt.Errorf("the track %s already contains the tag %s", track.Name, tag)
+	}
+	track.Tags = append(track.Tags, tag)
+	err = l.writeLibraryFile(*libFile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *realLibrary) DeleteTag(trackNumber int, tagNumber int) error {
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return err
+	}
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return err
+	}
+	trackIndex := trackNumberToIndex(trackNumber)
+	track := &libFile.Tracks[trackIndex]
+	err = validateTagNumber(tagNumber, *track)
+	if err != nil {
+		return err
+	}
+	tagIndex := tagNumberToIndex(tagNumber)
+	track.Tags = append(track.Tags[:tagIndex], track.Tags[tagIndex+1:]...)
+	err = l.writeLibraryFile(*libFile)
+	if err != nil {
+		return err
+	}
+	return nil
 }
