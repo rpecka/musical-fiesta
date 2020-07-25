@@ -29,7 +29,7 @@ func listTags(app *grumble.App, name string, tags []string) {
 	app.Printf(output)
 }
 
-func addTrack(app *grumble.App, library library.Library) {
+func addTrack(app *grumble.App, library *library.Library) {
 	trackCommand := grumble.Command{
 		Name:      "track",
 		Help:      "commands associated with manipulating tracks",
@@ -49,7 +49,7 @@ func addTrack(app *grumble.App, library library.Library) {
 			if err != nil {
 				return err
 			}
-			track, err := library.GetTrack(trackNumber)
+			track, err := (*library).GetTrack(trackNumber)
 			if err != nil {
 				return fmt.Errorf("failed to get track: %v", err)
 			}
@@ -73,7 +73,7 @@ func addTrack(app *grumble.App, library library.Library) {
 				return errors.New("incorrect number of arguments provided")
 			}
 			tagString := c.Args[0]
-			err = library.AddTag(trackNumber, tagString)
+			err = (*library).AddTag(trackNumber, tagString)
 			return err
 		},
 		Completer: nil,
@@ -97,7 +97,7 @@ func addTrack(app *grumble.App, library library.Library) {
 			if err != nil {
 				return errors.New("tag number must be a number")
 			}
-			err = library.DeleteTag(trackNumber, tagNumber)
+			err = (*library).DeleteTag(trackNumber, tagNumber)
 			return err
 		},
 		Completer: nil,

@@ -1,18 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"fiesta/src/audio"
 	"fiesta/src/commands"
-	"fiesta/src/csgo"
 	"fiesta/src/library"
-	"fiesta/src/loader"
 	"fiesta/src/settings"
 	"fmt"
 	"github.com/desertbit/grumble"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -103,39 +98,7 @@ func main() {
 		},
 	})
 
-	app.AddCommand(&grumble.Command{
-		Name:      "start",
-		Help:      "start listening for commands from CSGO",
-		Usage:     "start",
-		AllowArgs: false,
-		Run: func(c *grumble.Context) error {
-			stop := make(chan bool)
-			userdataDir, err := config.UserdataDirPath()
-			if err != nil {
-				return err
-			}
-			csgoDir, err := config.CSGODirPath()
-			if err != nil {
-				return err
-			}
-			destination := filepath.Join(csgoDir, csgo.VoiceInputFileName)
-			err = loader.Start(userdataDir, "z", stop, destination, lib)
-			if err != nil {
-				return err
-			}
-			reader := bufio.NewReader(os.Stdin)
-			fmt.Print("Press return to exit…")
-			_, err = reader.ReadString('\n')
-			if err != nil {
-				stop <- true
-				return err
-			}
-			stop <- true
-			return nil
-		},
-	})
-
-	commands.SetUpCommands(app, lib)
+	commands.SetUpCommands(app, &config, &lib)
 
 	grumble.Main(app)
 }

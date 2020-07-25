@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func addDeleteTrack(app *grumble.App, library library.Library) {
+func addDeleteTrack(app *grumble.App, library *library.Library) {
 	app.AddCommand(&grumble.Command{
 		Name:      "delete",
 		Help:      "delete a track",
@@ -22,7 +22,7 @@ func addDeleteTrack(app *grumble.App, library library.Library) {
 			if err != nil {
 				return fmt.Errorf("invalid track number: %v", err)
 			}
-			err = library.DeleteTrack(trackNumber)
+			err = (*library).DeleteTrack(trackNumber)
 			return err
 		},
 	})

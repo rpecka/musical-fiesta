@@ -137,6 +137,10 @@ func tagNumberToIndex(tagNumber int) int {
 	return tagNumber - 1
 }
 
+func TrackIndexToNumber(trackIndex int) int {
+	return trackIndex + 1
+}
+
 func validateTrackNumber(trackNumber int, libFile libraryFile) error {
 	if trackNumber <= 0 {
 		return errors.New("track number must be greater than zero")
