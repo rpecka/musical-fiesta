@@ -9,20 +9,20 @@ import (
 
 const (
 	// CFG Hierarchy
-	rootCFGName = "fiesta.cfg"
-	cfgDirName = "fiesta"
+	rootCFGName      = "fiesta.cfg"
+	cfgDirName       = "fiesta"
 	trackListCFGName = "fiesta_tracklist.cfg"
 
 	// Listing Tracks
-	listTracksCommand = "fiesta_list"
-	listTracksAliasList = "list"
+	listTracksCommand     = "fiesta_list"
+	listTracksAliasList   = "list"
 	listTracksAliasTracks = "tracks"
-	listTracksAliasLA = "la"
+	listTracksAliasLA     = "la"
 
 	// Audio Controls
 	toggleCommand = "fiesta_toggle"
-	playCommand = "fiesta_play"
-	stopCommand = "fiesta_stop"
+	playCommand   = "fiesta_play"
+	stopCommand   = "fiesta_stop"
 
 	// CFG Updates
 	updateCommand = "fiesta_updatecfg"
@@ -30,8 +30,8 @@ const (
 
 type EnumeratedTrack struct {
 	Number int
-	Name string
-	Tags []string
+	Name   string
+	Tags   []string
 }
 
 func rootCFGPath(rootDir string) string {
@@ -97,16 +97,16 @@ func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumerate
 	}
 	_ = writer.writeAlias(toggleCommand, playCommand)
 	_ = writer.writeAlias(playCommand, chainCommands([]string{
-		makeAliasCommand(toggleCommand, stopCommand),  // Set the toggle to stop
-		makeVoiceInputFromFile(true),  // Start pointing voice input to a file
-		makeVoiceLoopBack(true),  // Loop voice back to the user so they can hear too
-		makeVoiceRecord(true),  // Start voice input to the game
+		makeAliasCommand(toggleCommand, stopCommand), // Set the toggle to stop
+		makeVoiceInputFromFile(true),                 // Start pointing voice input to a file
+		makeVoiceLoopBack(true),                      // Loop voice back to the user so they can hear too
+		makeVoiceRecord(true),                        // Start voice input to the game
 	}))
 	_ = writer.writeAlias(stopCommand, chainCommands([]string{
-		makeVoiceRecord(false),  // Stop voice input
-		makeVoiceInputFromFile(false),  // Stop redirecting file to voice output
-		makeVoiceLoopBack(false),  // Stop playing the user's voice output back to them
-		makeAliasCommand(toggleCommand, playCommand),  // Set the toggle start again
+		makeVoiceRecord(false),                       // Stop voice input
+		makeVoiceInputFromFile(false),                // Stop redirecting file to voice output
+		makeVoiceLoopBack(false),                     // Stop playing the user's voice output back to them
+		makeAliasCommand(toggleCommand, playCommand), // Set the toggle start again
 	}))
 	_ = writer.writeBind(playKey, toggleCommand)
 

@@ -10,7 +10,7 @@ const (
 
 	// Steamapps
 	csgo = "csgo"
-	cfg = "cfg"
+	cfg  = "cfg"
 )
 
 func PathToCFG(csgoDir string) string {

@@ -36,7 +36,7 @@ func isValidTag(tag string) bool {
 	if strings.ContainsAny(tag, unallowedChars) {
 		return false
 	}
-	if _, err := strconv.Atoi(tag); err == nil {  // Don't allow integers to avoid collisions with track indices
+	if _, err := strconv.Atoi(tag); err == nil { // Don't allow integers to avoid collisions with track indices
 		return false
 	}
 	return true

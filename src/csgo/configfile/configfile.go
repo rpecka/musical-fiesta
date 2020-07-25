@@ -63,7 +63,7 @@ func chainCommands(commands []string) string {
 }
 
 func newWriter(path string) (*configfileWriter, error) {
-	file, err := os.OpenFile(path, os.O_RDWR | os.O_CREATE | os.O_TRUNC, os.FileMode(0755))
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(0755))
 	if err != nil {
 		return nil, err
 	}
