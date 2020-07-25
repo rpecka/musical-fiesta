@@ -8,8 +8,8 @@ import (
 	"fmt"
 )
 
-func load(trackNumber int, destination string, library library.Library) error {
-	track, err := library.GetTrack(trackNumber)
+func load(trackNumber int, destination string, library *library.Library) error {
+	track, err := (*library).GetTrack(trackNumber)
 	if err != nil {
 		return err
 	}
@@ -17,7 +17,7 @@ func load(trackNumber int, destination string, library library.Library) error {
 	return err
 }
 
-func Start(userdataDir string, relayKey string, stop chan bool, destination string, library library.Library) error {
+func Start(userdataDir string, relayKey string, stop chan bool, destination string, library *library.Library) error {
 	started := make(chan error)
 	fileChanged := make(chan string)
 	go func() {
