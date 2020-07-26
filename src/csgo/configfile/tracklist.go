@@ -14,6 +14,7 @@ func writeTrackList(dest string, tracks []EnumeratedTrack) error {
 	if err != nil {
 		return err
 	}
+	defer writer.close()
 
 	err = writer.writeEchoHeader("Tracks")
 	if err != nil {
