@@ -22,7 +22,7 @@ func addWatchers(watcher *fsnotify.Watcher, userdataDir string) error {
 		}
 		// We are looking for ../userdata/USER_ID/730/local/ since we don't know which steam account the user is logged
 		// into but we should be able to just watch all the account directories that have CSGO (730) in them
-		localConfigDirPath := filepath.Join(userdataDir, file.Name(), csgo.GameID, csgo.LocalConfigDirName)
+		localConfigDirPath := filepath.Join(userdataDir, file.Name(), csgo.GameID, csgo.LocalConfigDirName, csgo.CFGDirName)
 		if !util.Exists(localConfigDirPath) {
 			continue
 		}

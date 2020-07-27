@@ -52,7 +52,7 @@ func addStart(app *grumble.App, settings *settings.Settings, library *library.Li
 				return err
 			}
 			destination := filepath.Join(csgoDir, csgo.VoiceInputFileName)
-			err = loader.Start(userdataDir, "z", stop, destination, library)
+			err = loader.Start(userdataDir, "=", stop, destination, library)
 			if err != nil {
 				return err
 			}
