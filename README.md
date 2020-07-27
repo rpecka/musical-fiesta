@@ -40,7 +40,7 @@ $: where go
 ```
 and getting an output like:
 ```
-C:\Program Files (x86)\go\go
+C:\Go\bin\go.exe
 ```
 and running
 ```
@@ -48,7 +48,7 @@ $: where ffmpeg
 ```
 and getting an output like:
 ```
-C:\Program Files (x86)\ffmepg\ffmpeg
+C:\Program Files (x86)\ffmepg\ffmpeg.exe
 ```
 Note that the output does not need to be exactly the same, it only needs to not show an error.
 If either of these commands fail, you will need to add the directories where you installed those tools to your PATH environment variable. You can do this in Control Panel > System > Advanced System Settings > Environment Variables
