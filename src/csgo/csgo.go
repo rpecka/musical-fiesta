@@ -7,6 +7,7 @@ const (
 	VoiceInputFileName = "voice_input.wav"
 	GameID             = "730"
 	LocalConfigDirName = "local"
+	CFGDirName         = "cfg"
 
 	// Steamapps
 	csgo = "csgo"
