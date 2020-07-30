@@ -42,6 +42,6 @@ func TestGenerateTagGroupsGroups(t *testing.T) {
 		t.Error("there should not have been any groups")
 	}
 	if len(resultSingles) > 0 {
-		t.Error("there should be five singles in the results")
+		t.Error("there should be no singles")
 	}
 }
