@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"errors"
 	"fiesta/src/configwatcher"
 	"fiesta/src/csgo/configfile"
 	"fiesta/src/library"
@@ -34,7 +35,12 @@ func Start(userdataDir string, relayKey string, stop chan bool, destination stri
 				fmt.Print(err)
 				continue
 			}
-			err = load(result.CurrentTrack, destination, library)
+			switch result.ResultType {
+			case configfile.LoadNumberResult:
+				err = load(result.TrackNumber, destination, library)
+			case configfile.TagResult:
+				err = errors.New("string commands are not yet supported")
+			}
 			if err != nil {
 				fmt.Printf("failed to load track because: %v\n", err)
 			}

@@ -14,8 +14,29 @@ const (
 	RelayFileName = "fiesta-relay.cfg"
 )
 
+const (
+	LoadNumberResult = iota
+	TagResult
+)
+
 type ParseResult struct {
-	CurrentTrack int
+	ResultType  int
+	TrackNumber int
+	Tag         string
+}
+
+func makeLoadNumberResult(trackNumber int) *ParseResult {
+	return &ParseResult{
+		ResultType:  LoadNumberResult,
+		TrackNumber: trackNumber,
+	}
+}
+
+func makeTagResult(tag string) *ParseResult {
+	return &ParseResult{
+		ResultType: TagResult,
+		Tag:        tag,
+	}
 }
 
 func Parse(relayFilePath string, relayKey string) (*ParseResult, error) {
@@ -40,11 +61,10 @@ func Parse(relayFilePath string, relayKey string) (*ParseResult, error) {
 	command := matches[1]
 	integer, err := strconv.Atoi(command)
 	if err != nil {
-		return nil, fmt.Errorf("command value: %v could not be parsed to a valid command: %v", command, err)
+		return makeTagResult(command), nil
+	} else {
+		return makeLoadNumberResult(integer), nil
 	}
-	return &ParseResult{
-		CurrentTrack: integer,
-	}, nil
 }
 
 func bindCommandRegex(relayKey string) *regexp.Regexp {

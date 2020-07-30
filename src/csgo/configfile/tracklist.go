@@ -9,14 +9,14 @@ func formatTagList(tags []string) string {
 	return fmt.Sprintf("[%s]", strings.Join(tags, ", "))
 }
 
-func writeTrackList(dest string, tracks []EnumeratedTrack) error {
+func writeTrackList(dest string, title string, tracks []EnumeratedTrack) error {
 	writer, err := newWriter(dest)
 	if err != nil {
 		return err
 	}
 	defer writer.close()
 
-	err = writer.writeEchoHeader("Tracks")
+	err = writer.writeEchoHeader(title)
 	if err != nil {
 		return err
 	}
