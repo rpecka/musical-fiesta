@@ -1,11 +1,18 @@
 package commands
 
 import (
+	"bufio"
 	"errors"
 	"fiesta/src/library"
+	"fiesta/src/loader"
 	"fmt"
 	"github.com/desertbit/grumble"
+	"github.com/faiface/beep/speaker"
+	"github.com/faiface/beep/wav"
+	"os"
+	"path/filepath"
 	"strconv"
+	"time"
 )
 
 func extractTrackNumberArgument(ctx *grumble.Context) (int, error) {
@@ -102,5 +109,41 @@ func addTrack(app *grumble.App, library *library.Library) {
 		},
 		Completer: nil,
 	})
+
+	trackCommand.AddCommand(&grumble.Command{
+		Name:      "test",
+		Help:      "listen to a track to make sure that the volume and trimming is correct",
+		Usage:     "track test [track-number]",
+		AllowArgs: true,
+		Run: func(c *grumble.Context) error {
+			trackNumber, err := extractTrackNumberArgument(c)
+			if err != nil {
+				return err
+			}
+			destination := filepath.Join(os.TempDir(), "test-track.wav")
+			err = loader.Load(trackNumber, destination, library)
+			if err != nil {
+				return err
+			}
+			f, err := os.Open(destination)
+			if err != nil {
+				return err
+			}
+			streamer, format, err := wav.Decode(f)
+			if err != nil {
+				return err
+			}
+			defer streamer.Close()
+			_ = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+			speaker.Play(streamer)
+			app.Println("Press return to exit…")
+			reader := bufio.NewReader(os.Stdin)
+			_, err = reader.ReadString('\n')
+			speaker.Clear()
+			return nil
+		},
+		Completer: nil,
+	})
+
 	app.AddCommand(&trackCommand)
 }
