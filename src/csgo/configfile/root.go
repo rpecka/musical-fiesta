@@ -50,6 +50,28 @@ func makeLoadLogic(relayKey string, track EnumeratedTrack) string {
 	})
 }
 
+func generateTagGroups(tracks []EnumeratedTrack) (map[string]*EnumeratedTrack, map[string][]*EnumeratedTrack) {
+	singles := make(map[string]*EnumeratedTrack)
+	groups := make(map[string][]*EnumeratedTrack)
+	for _, track := range tracks {
+		for _, tag := range track.Tags {
+			existing, inSingles := singles[tag]
+			if inSingles {
+				groups[tag] = []*EnumeratedTrack{existing, &track}
+				delete(singles, tag)
+			} else {
+				group, inGroups := groups[tag]
+				if inGroups {
+					groups[tag] = append(group, &track)
+				} else {
+					singles[tag] = &track
+				}
+			}
+		}
+	}
+	return singles, groups
+}
+
 func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumeratedTracks []EnumeratedTrack) error {
 	writer, err := newWriter(rootCFGPath(rootDir))
 	if err != nil {
