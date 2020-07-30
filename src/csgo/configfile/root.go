@@ -142,6 +142,14 @@ func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumerate
 		_ = writer.writeAlias(strconv.Itoa(track.Number), makeLoadLogic(relayKey, track))
 	}
 
+	// Loading Tracks by Tag
+	singles, _ := generateTagGroups(enumeratedTracks)
+	_ = writer.writeHeader("Loading Tracks by Tag")
+
+	for tag, track := range singles {
+		_ = writer.writeAlias(tag, strconv.Itoa(track.Number))
+	}
+
 	return nil
 }
 
