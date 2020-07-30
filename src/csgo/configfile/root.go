@@ -50,21 +50,21 @@ func makeLoadLogic(relayKey string, track EnumeratedTrack) string {
 	})
 }
 
-func generateTagGroups(tracks []EnumeratedTrack) (map[string]*EnumeratedTrack, map[string][]*EnumeratedTrack) {
-	singles := make(map[string]*EnumeratedTrack)
-	groups := make(map[string][]*EnumeratedTrack)
+func generateTagGroups(tracks []EnumeratedTrack) (map[string]EnumeratedTrack, map[string][]EnumeratedTrack) {
+	singles := make(map[string]EnumeratedTrack)
+	groups := make(map[string][]EnumeratedTrack)
 	for _, track := range tracks {
 		for _, tag := range track.Tags {
 			existing, inSingles := singles[tag]
 			if inSingles {
-				groups[tag] = []*EnumeratedTrack{existing, &track}
+				groups[tag] = []EnumeratedTrack{existing, track}
 				delete(singles, tag)
 			} else {
 				group, inGroups := groups[tag]
 				if inGroups {
-					groups[tag] = append(group, &track)
+					groups[tag] = append(group, track)
 				} else {
-					singles[tag] = &track
+					singles[tag] = track
 				}
 			}
 		}
@@ -90,7 +90,7 @@ func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumerate
 	}
 
 	// Listing Tracks
-	err = writeTrackList(filepath.Join(rootDir, cfgDirName, trackListCFGName), enumeratedTracks)
+	err = writeTrackList(filepath.Join(rootDir, cfgDirName, trackListCFGName), "Tracks", enumeratedTracks)
 	if err != nil {
 		return err
 	}
@@ -143,11 +143,24 @@ func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumerate
 	}
 
 	// Loading Tracks by Tag
-	singles, _ := generateTagGroups(enumeratedTracks)
+	singles, groups := generateTagGroups(enumeratedTracks)
 	_ = writer.writeHeader("Loading Tracks by Tag")
 
 	for tag, track := range singles {
 		_ = writer.writeAlias(tag, strconv.Itoa(track.Number))
+	}
+
+	// Showing Tag Groups
+	_ = writer.writeHeader("Showing Tag Groups")
+	for tag, tracks := range groups {
+		tagCFGName := tag + ".cfg"
+
+		err = writeTrackList(filepath.Join(rootDir, cfgDirName, tagCFGName), tag, tracks)
+		if err != nil {
+			return err
+		}
+
+		_ = writer.writeAlias(tag, cfgDirName+"/"+tagCFGName)
 	}
 
 	return nil

@@ -11,8 +11,8 @@ func TestGenerateTagGroupsSingles(t *testing.T) {
 		},
 		{
 			Number: 2,
-			Name: "Sorry",
-			Tags: []string{"nick", "of", "time"},
+			Name:   "Sorry",
+			Tags:   []string{"nick", "of", "time"},
 		},
 	}
 	resultSingles, resultGroups := generateTagGroups(singles)
@@ -28,13 +28,13 @@ func TestGenerateTagGroupsGroups(t *testing.T) {
 	tracks := []EnumeratedTrack{
 		{
 			Number: 1,
-			Name: "Hi",
-			Tags: []string{"hi", "bye"},
+			Name:   "Hi",
+			Tags:   []string{"hi", "bye"},
 		},
 		{
 			Number: 2,
-			Name: "Bye",
-			Tags: []string{"hi", "bye"},
+			Name:   "Bye",
+			Tags:   []string{"hi", "bye"},
 		},
 	}
 	resultSingles, resultGroups := generateTagGroups(tracks)
