@@ -9,7 +9,7 @@ import (
 	"fmt"
 )
 
-func load(trackNumber int, destination string, library *library.Library) error {
+func Load(trackNumber int, destination string, library *library.Library) error {
 	track, err := (*library).GetTrack(trackNumber)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func Start(userdataDir string, relayKey string, stop chan bool, destination stri
 			}
 			switch result.ResultType {
 			case configfile.LoadNumberResult:
-				err = load(result.TrackNumber, destination, library)
+				err = Load(result.TrackNumber, destination, library)
 			case configfile.TagResult:
 				err = errors.New("string commands are not yet supported")
 			}
