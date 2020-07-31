@@ -12,15 +12,16 @@ const unallowedChars = "\n "
 func generateTagsFromFilename(trackFilename string) []string {
 	trimmed := strings.TrimSpace(trackFilename)
 	words := strings.Split(trimmed, " ")
-	for index, word := range words {
+	validTags := make([]string, 0)
+	for _, word := range words {
 		word := strings.ToLower(word)
 		if !isValidTag(word) {
 			continue
 		}
-		words[index] = word
+		validTags = append(validTags, word)
 	}
-	uniqueWords := util.Unique(words)
-	return uniqueWords
+	uniqueTags := util.Unique(validTags)
+	return uniqueTags
 }
 
 func isValidTag(tag string) bool {

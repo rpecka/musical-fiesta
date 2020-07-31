@@ -160,7 +160,7 @@ func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumerate
 			return err
 		}
 
-		_ = writer.writeAlias(tag, cfgDirName+"/"+tagCFGName)
+		_ = writer.writeAlias(tag, makeExecCommand(cfgDirName+"/"+tagCFGName))
 	}
 
 	return nil
