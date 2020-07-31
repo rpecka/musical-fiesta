@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 const (
@@ -35,6 +36,8 @@ type Library interface {
 	DeleteTrack(trackNumber int) error
 	AddTag(trackNumber int, tag string) error
 	DeleteTag(trackNumber int, tagNumber int) error
+	TrimTrack(trackNumber int, start time.Duration, end time.Duration) error
+	ClearTrim(trackNumber int) error
 }
 
 func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
@@ -308,4 +311,37 @@ func (l *realLibrary) DeleteTag(trackNumber int, tagNumber int) error {
 		return err
 	}
 	return nil
+}
+
+func (l *realLibrary) TrimTrack(trackNumber int, start time.Duration, end time.Duration) error {
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return err
+	}
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return err
+	}
+	trackIndex := trackNumberToIndex(trackNumber)
+	track := &libFile.Tracks[trackIndex]
+	track.Trim = &trackTrim{
+		Start: start,
+		End:   end,
+	}
+	return l.writeLibraryFile(*libFile)
+}
+
+func (l *realLibrary) ClearTrim(trackNumber int) error {
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return err
+	}
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return err
+	}
+	trackIndex := trackNumberToIndex(trackNumber)
+	track := &libFile.Tracks[trackIndex]
+	track.Trim = nil
+	return l.writeLibraryFile(*libFile)
 }
