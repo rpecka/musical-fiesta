@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -45,6 +46,35 @@ func addTrack(app *grumble.App, library *library.Library) {
 		Run:       nil,
 		Completer: nil,
 	}
+
+	trackCommand.AddCommand(&grumble.Command{
+		Name:      "info",
+		Help:      "show information for a track",
+		Usage:     "track info [track-number]",
+		AllowArgs: true,
+		Run: func(c *grumble.Context) error {
+			trackNumber, err := extractTrackNumberArgument(c)
+			if err != nil {
+				return err
+			}
+			track, err := (*library).GetTrack(trackNumber)
+			if err != nil {
+				return err
+			}
+			output := fmt.Sprintf("Name:\t%s\nPath:\t%s\n", track.Name, track.Path)
+			output += "Tags:\t[" + strings.Join(track.Tags, ", ") + "]\n"
+			trim := track.Trim
+			output += "Trim:\t"
+			if trim != nil {
+				output += fmt.Sprintf("start: %v\tend: %v\n", trim.Start, trim.End)
+			} else {
+				output += "None\n"
+			}
+			app.Printf(output)
+			return nil
+		},
+		Completer: nil,
+	})
 
 	trackCommand.AddCommand(&grumble.Command{
 		Name:      "list-tags",
