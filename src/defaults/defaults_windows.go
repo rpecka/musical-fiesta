@@ -1,18 +1,17 @@
-// +build darwin
+// +build windows
 
-package crossplatform
+package defaults
 
 import (
-	"fiesta/src/util"
 	"path/filepath"
 )
 
 const (
-	WhichCommand = "which"
+	WhichCommand = "where"
 )
 
 var (
-	defaultSteamDir    = filepath.Join(util.UserHomeDir(), "Library", "Application Support", "Steam")
+	defaultSteamDir    = filepath.Join("C:\\", "Program Files (x86)", "Steam")
 	defaultUserdataDir = filepath.Join(defaultSteamDir, "userdata")
 	defaultCSGODir     = filepath.Join(defaultSteamDir, "steamapps", "common", "Counter-Strike Global Offensive")
 )

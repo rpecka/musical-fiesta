@@ -3,7 +3,7 @@ package settings
 import (
 	"bufio"
 	"encoding/json"
-	"fiesta/src/crossplatform"
+	"fiesta/src/defaults"
 	"fiesta/src/util"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
@@ -28,6 +28,8 @@ type Settings interface {
 	LibraryPath() (string, error)
 	UserdataDirPath() (string, error)
 	CSGODirPath() (string, error)
+	TrackRelayKey() (string, error)
+	OffsetRelayKey() (string, error)
 }
 
 // Settings : Object to manage the configuration for the app
@@ -39,6 +41,8 @@ type settingsFile struct {
 	LibraryPath *string `json:"libraryPath,omitempty"`
 	UserdataDir *string `json:"userdataDir,omitempty"`
 	CSGODir     *string `json:"CSGODir,omitempty"`
+	TrackRelayKey *string `json:"trackRelayKey,omitempty"`
+	OffsetRelayKey *string `json:"offsetRelayKey,omitempty"`
 }
 
 func InitializeSettings() (Settings, error) {
@@ -87,7 +91,7 @@ func InitializeSettings() (Settings, error) {
 
 	if settingsFile.UserdataDir == nil {
 		reader := bufio.NewReader(os.Stdin)
-		defaultDir := crossplatform.DefaultUserdataDir()
+		defaultDir := defaults.DefaultUserdataDir()
 		fmt.Print("Please provide the path to your Steam userdata directory. Press return to use the default " +
 			"(" + defaultDir + "): ")
 		path, err := reader.ReadString('\n')
@@ -109,7 +113,7 @@ func InitializeSettings() (Settings, error) {
 
 	if settingsFile.CSGODir == nil {
 		reader := bufio.NewReader(os.Stdin)
-		defaultDir := crossplatform.DefaultCSGODir()
+		defaultDir := defaults.DefaultCSGODir()
 		fmt.Print("Please provide the path to your CSGO game files directory. Press return to use the default " +
 			"(" + defaultDir + "): ")
 		path, err := reader.ReadString('\n')
@@ -122,6 +126,48 @@ func InitializeSettings() (Settings, error) {
 			settingsFile.CSGODir = &defaultDir
 		} else {
 			settingsFile.CSGODir = &csgoPath
+		}
+		err = settings.writeSettings(settingsFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if settingsFile.TrackRelayKey == nil {
+		reader := bufio.NewReader(os.Stdin)
+		defaultKey := defaults.DefaultTrackRelayKey
+		fmt.Print("Please enter the bind code for a key you do not use in CSGO. Press return to use the default " +
+			"(" + defaultKey + "): ")
+		key, err := reader.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
+		cleanKey := strings.TrimSpace(key)
+		if cleanKey == "" {
+			settingsFile.TrackRelayKey = &defaultKey
+		} else {
+			settingsFile.OffsetRelayKey = &cleanKey
+		}
+		err = settings.writeSettings(settingsFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if settingsFile.OffsetRelayKey == nil {
+		reader := bufio.NewReader(os.Stdin)
+		defaultKey := defaults.DefaultOffsetRelayKey
+		fmt.Print("Please enter the bind code for a key you do not use in CSGO. Press return to use the default " +
+			"(" + defaultKey + "): ")
+		key, err := reader.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
+		cleanKey := strings.TrimSpace(key)
+		if cleanKey == "" {
+			settingsFile.OffsetRelayKey = &defaultKey
+		} else {
+			settingsFile.OffsetRelayKey = &cleanKey
 		}
 		err = settings.writeSettings(settingsFile)
 		if err != nil {
@@ -145,7 +191,7 @@ func (s realSettings) parseSettings() (*settingsFile, error) {
 }
 
 func (s realSettings) writeSettings(f *settingsFile) error {
-	byteValue, err := json.Marshal(f)
+	byteValue, err := json.MarshalIndent(f, "", "    ")
 	if err != nil {
 		return err
 	}
@@ -178,4 +224,20 @@ func (s realSettings) CSGODirPath() (string, error) {
 		return "", err
 	}
 	return *settings.CSGODir, nil
+}
+
+func (s realSettings) TrackRelayKey() (string, error) {
+	settings, err := s.parseSettings()
+	if err != nil {
+		return "", err
+	}
+	return *settings.TrackRelayKey, nil
+}
+
+func (s realSettings) OffsetRelayKey() (string, error) {
+	settings, err := s.parseSettings()
+	if err != nil {
+		return "", err
+	}
+	return *settings.OffsetRelayKey, nil
 }
