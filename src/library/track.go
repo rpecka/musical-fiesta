@@ -13,3 +13,7 @@ type trackTrim struct {
 	Start *time.Duration `json:"start"`
 	End   *time.Duration `json:"end"`
 }
+
+func (t track) NeedsModification() bool {
+	return t.Trim != nil
+}

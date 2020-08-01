@@ -30,6 +30,7 @@ type libraryFile struct {
 }
 
 type Library interface {
+	Manipulator() audio.Manipulator
 	Tracks() ([]track, error)
 	GetTrack(trackNumber int) (*track, error)
 	Import(trackPath string) error
@@ -163,6 +164,10 @@ func validateTagNumber(tagNumber int, track track) error {
 		return fmt.Errorf("track number is out of bounds: %d", len(track.Tags))
 	}
 	return nil
+}
+
+func (l *realLibrary) Manipulator() audio.Manipulator {
+	return l.manipulator
 }
 
 func (l *realLibrary) Tracks() ([]track, error) {
