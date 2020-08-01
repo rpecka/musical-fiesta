@@ -356,6 +356,8 @@ func (l *realLibrary) TrimTrack(trackNumber int, start *time.Duration, end *time
 	}
 	defer streamer.Close()
 	duration := format.SampleRate.D(streamer.Len())
+
+	// FIXME: Need to validate provided start and end times against each other and against existing start and end times
 	err = validateTimeOffset(start, duration)
 	if err != nil {
 		return fmt.Errorf("invalid start time: %v", err)
