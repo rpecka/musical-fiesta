@@ -23,6 +23,9 @@ const (
 	toggleCommand = "fiesta_toggle"
 	playCommand   = "fiesta_play"
 	stopCommand   = "fiesta_stop"
+	firstQuarterCommand = "q1"
+	secondQuarterCommand = "q2"
+	thirdQuarterCommand = "q3"
 
 	// CFG Updates
 	updateCommand = "fiesta_updatecfg"
@@ -42,9 +45,10 @@ func cfgDirPath(rootDir string) string {
 	return filepath.Join(rootDir, cfgDirName)
 }
 
-func makeLoadLogic(relayKey string, track EnumeratedTrack) string {
+func makeLoadLogic(trackRelayKey, offsetRelayKey string, track EnumeratedTrack) string {
 	return chainCommands([]string{
-		makeBindCommand(relayKey, strconv.Itoa(track.Number)),
+		makeBindCommand(trackRelayKey, strconv.Itoa(track.Number)),
+		makeUnbindCommand(offsetRelayKey),
 		updateCommand,
 		makeEcho(fmt.Sprintf("Loaded %s", track.Name)),
 	})
@@ -72,7 +76,7 @@ func generateTagGroups(tracks []EnumeratedTrack) (map[string]EnumeratedTrack, ma
 	return singles, groups
 }
 
-func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumeratedTracks []EnumeratedTrack) error {
+func WriteConfigFiles(rootDir string, playKey string, trackRelayKey, offsetRelayKey string, enumeratedTracks []EnumeratedTrack) error {
 	writer, err := newWriter(rootCFGPath(rootDir))
 	if err != nil {
 		return err
@@ -119,6 +123,7 @@ func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumerate
 	}
 	_ = writer.writeAlias(toggleCommand, playCommand)
 	_ = writer.writeAlias(playCommand, chainCommands([]string{
+		makeUnbindCommand(offsetRelayKey),                    // Clear out any offsets
 		makeAliasCommand(toggleCommand, stopCommand), // Set the toggle to stop
 		makeVoiceInputFromFile(true),                 // Start pointing voice input to a file
 		makeVoiceLoopBack(true),                      // Loop voice back to the user so they can hear too
@@ -129,8 +134,12 @@ func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumerate
 		makeVoiceInputFromFile(false),                // Stop redirecting file to voice output
 		makeVoiceLoopBack(false),                     // Stop playing the user's voice output back to them
 		makeAliasCommand(toggleCommand, playCommand), // Set the toggle start again
+		makeUnbindCommand(offsetRelayKey),                    // Clear out any offsets
 	}))
 	_ = writer.writeBind(playKey, toggleCommand)
+	_ = writer.writeAlias(firstQuarterCommand, makeBindCommand(offsetRelayKey, "25%"))
+	_ = writer.writeAlias(secondQuarterCommand, makeBindCommand(offsetRelayKey, "50%"))
+	_ = writer.writeAlias(thirdQuarterCommand, makeBindCommand(offsetRelayKey, "75%"))
 
 	// CFG Updates
 	_ = writer.writeHeader("CFG Updates")
@@ -139,7 +148,7 @@ func WriteConfigFiles(rootDir string, playKey string, relayKey string, enumerate
 	// Loading Tracks by Index
 	_ = writer.writeHeader("Loading Tracks by Index")
 	for _, track := range enumeratedTracks {
-		_ = writer.writeAlias(strconv.Itoa(track.Number), makeLoadLogic(relayKey, track))
+		_ = writer.writeAlias(strconv.Itoa(track.Number), makeLoadLogic(trackRelayKey, offsetRelayKey, track))
 	}
 
 	// Loading Tracks by Tag
