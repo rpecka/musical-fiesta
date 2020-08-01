@@ -194,6 +194,21 @@ func addTrack(app *grumble.App, library *library.Library) {
 	})
 
 	trackCommand.AddCommand(&grumble.Command{
+		Name:      "clear-trim",
+		Help:      "erase trim settings for a track",
+		Usage:     "track clear-trim [track-number]",
+		AllowArgs: true,
+		Run: func(c *grumble.Context) error {
+			trackNumber, err := extractTrackNumberArgument(c)
+			if err != nil {
+				return err
+			}
+			return (*library).ClearTrim(trackNumber)
+		},
+		Completer: nil,
+	})
+
+	trackCommand.AddCommand(&grumble.Command{
 		Name:      "test",
 		Help:      "listen to a track to make sure that the volume and trimming is correct",
 		Usage:     "track test [track-number]",
