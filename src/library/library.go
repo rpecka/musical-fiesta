@@ -6,6 +6,7 @@ import (
 	"fiesta/src/audio"
 	"fiesta/src/util"
 	"fmt"
+	"github.com/faiface/beep/wav"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -36,7 +37,7 @@ type Library interface {
 	DeleteTrack(trackNumber int) error
 	AddTag(trackNumber int, tag string) error
 	DeleteTag(trackNumber int, tagNumber int) error
-	TrimTrack(trackNumber int, start time.Duration, end time.Duration) error
+	TrimTrack(trackNumber int, start *time.Duration, end *time.Duration) error
 	ClearTrim(trackNumber int) error
 }
 
@@ -263,6 +264,18 @@ func (l *realLibrary) DeleteTrack(trackNumber int) error {
 	return err
 }
 
+func validateTimeOffset(offset *time.Duration, length time.Duration) error {
+	if offset == nil {
+		return nil
+	} else if *offset < 0 {
+		return errors.New("cannot have a negative time offset")
+	} else if *offset > length {
+		return fmt.Errorf("time offset %v was longer than the track length %v", *offset, length)
+	} else {
+		return nil
+	}
+}
+
 func (l *realLibrary) AddTag(trackNumber int, tag string) error {
 	tag = strings.ToLower(tag)
 	if !isValidTag(tag) {
@@ -313,7 +326,7 @@ func (l *realLibrary) DeleteTag(trackNumber int, tagNumber int) error {
 	return nil
 }
 
-func (l *realLibrary) TrimTrack(trackNumber int, start time.Duration, end time.Duration) error {
+func (l *realLibrary) TrimTrack(trackNumber int, start *time.Duration, end *time.Duration) error {
 	libFile, err := l.readLibraryFile()
 	if err != nil {
 		return err
@@ -323,11 +336,44 @@ func (l *realLibrary) TrimTrack(trackNumber int, start time.Duration, end time.D
 		return err
 	}
 	trackIndex := trackNumberToIndex(trackNumber)
-	track := &libFile.Tracks[trackIndex]
-	track.Trim = &trackTrim{
-		Start: start,
-		End:   end,
+	if start == nil && end == nil { // end early after validating the track number if we are not making any changes
+		return nil
 	}
+	track := &libFile.Tracks[trackIndex]
+	f, err := os.Open(track.Path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	streamer, format, err := wav.Decode(f)
+	if err != nil {
+		return err
+	}
+	defer streamer.Close()
+	duration := format.SampleRate.D(streamer.Len())
+	err = validateTimeOffset(start, duration)
+	if err != nil {
+		return fmt.Errorf("invalid start time: %v", err)
+	}
+	err = validateTimeOffset(end, duration)
+	if err != nil {
+		return fmt.Errorf("invalid end time: %v", err)
+	}
+
+	if track.Trim != nil {
+		if start != nil {
+			track.Trim.Start = start
+		}
+		if end != nil {
+			track.Trim.End = end
+		}
+	} else {
+		track.Trim = &trackTrim{
+			Start: start,
+			End:   end,
+		}
+	}
+
 	return l.writeLibraryFile(*libFile)
 }
 

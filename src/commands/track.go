@@ -16,6 +16,13 @@ import (
 	"time"
 )
 
+const (
+	startTimeFlag      = "start"
+	startTimeFlagShort = "s"
+	endTimeFlag        = "end"
+	endTimeFlagShort   = "e"
+)
+
 func extractTrackNumberArgument(ctx *grumble.Context) (int, error) {
 	if len(ctx.Args) < 1 {
 		return -1, errors.New("no track number provided")
@@ -136,6 +143,52 @@ func addTrack(app *grumble.App, library *library.Library) {
 			}
 			err = (*library).DeleteTag(trackNumber, tagNumber)
 			return err
+		},
+		Completer: nil,
+	})
+
+	trackCommand.AddCommand(&grumble.Command{
+		Name: "trim",
+		Help: "trim a track's start and end times",
+		Usage: "track trim --start [start-seconds] --end [end-seconds] [track-number] \n" +
+			"or:\ttrack trim --start [start-seconds] [track-number] \n" +
+			"or:\ttrack trim --end [end-seconds] [track-number]",
+		Flags: func(f *grumble.Flags) {
+			f.Duration(startTimeFlagShort, startTimeFlag, -1, "the start time in seconds. "+
+				"Negative values indicate the start of the track")
+			f.Duration(endTimeFlagShort, endTimeFlag, -1, "the end time in seconds. "+
+				"Negative values indicate the end of the track")
+		},
+		AllowArgs: true,
+		Run: func(c *grumble.Context) error {
+			trackNumber, err := extractTrackNumberArgument(c)
+			if err != nil {
+				return err
+			}
+			startInput := c.Flags.Duration(startTimeFlag)
+			endInput := c.Flags.Duration(endTimeFlag)
+
+			var startTime *time.Duration
+			var endTime *time.Duration
+
+			if startInput < 0 {
+				startTime = nil
+			} else {
+				startTime = &startInput
+			}
+
+			if endInput < 0 {
+				endTime = nil
+			} else {
+				endTime = &endInput
+			}
+
+			if startTime == nil && endTime == nil {
+				return errors.New("either a start time or an end time or both must be provided\n" +
+					"use track clear-trim to reset trim settings")
+			}
+
+			return (*library).TrimTrack(trackNumber, startTime, endTime)
 		},
 		Completer: nil,
 	})
