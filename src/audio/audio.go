@@ -4,6 +4,7 @@ import (
 	"fiesta/src/crossplatform"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -21,6 +22,7 @@ const (
 
 type Manipulator interface {
 	ConvertToWav(inputPath string, outputPath string) error
+	ApplyTransformations(inputPath string, outputPath string, start *float64, end *float64) error
 }
 
 type ffmpegAudioManipulator struct {
@@ -40,16 +42,42 @@ func InitializeAudioManipulator() (Manipulator, error) {
 	return &audio, nil
 }
 
-func (f *ffmpegAudioManipulator) ConvertToWav(inputPath string, outputPath string) error {
-	output, err := exec.Command(f.ffmpegPath,
+func makeBaseArgs(inputPath string) []string {
+	return []string{
 		"-i", inputPath,
 		mapMetadata, "-1",
 		bitexact,
+		"-y",
+	}
+}
+
+func (f *ffmpegAudioManipulator) ConvertToWav(inputPath string, outputPath string) error {
+	args := makeBaseArgs(inputPath)
+	args = append(args,
 		audioQuality, "100",
 		sampleRate, "22050",
 		audioChannels, "1",
 		audioCodec, pcmS16le,
-		outputPath).CombinedOutput()
+		outputPath,
+	)
+	output, err := exec.Command(f.ffmpegPath, args...).CombinedOutput()
+	outputString := string(output)
+	if err != nil {
+		return fmt.Errorf("ffmpeg execution error: %v - %v", err, outputString)
+	}
+	return nil
+}
+
+func (f *ffmpegAudioManipulator) ApplyTransformations(inputPath string, outputPath string, start *float64, end *float64) error {
+	args := makeBaseArgs(inputPath)
+	if start != nil {
+		args = append(args, "-ss", strconv.FormatFloat(*start, 'f', 1, 64))
+	}
+	if end != nil {
+		args = append(args, "-to", strconv.FormatFloat(*end, 'f', 1, 64))
+	}
+	args = append(args, outputPath)
+	output, err := exec.Command(f.ffmpegPath, args...).CombinedOutput()
 	outputString := string(output)
 	if err != nil {
 		return fmt.Errorf("ffmpeg execution error: %v - %v", err, outputString)

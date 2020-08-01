@@ -6,11 +6,13 @@ import (
 	"fiesta/src/audio"
 	"fiesta/src/util"
 	"fmt"
+	"github.com/faiface/beep/wav"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 const (
@@ -28,6 +30,7 @@ type libraryFile struct {
 }
 
 type Library interface {
+	Manipulator() audio.Manipulator
 	Tracks() ([]track, error)
 	GetTrack(trackNumber int) (*track, error)
 	Import(trackPath string) error
@@ -35,6 +38,8 @@ type Library interface {
 	DeleteTrack(trackNumber int) error
 	AddTag(trackNumber int, tag string) error
 	DeleteTag(trackNumber int, tagNumber int) error
+	TrimTrack(trackNumber int, start *time.Duration, end *time.Duration) error
+	ClearTrim(trackNumber int, keepStart, keepEnd bool) error
 }
 
 func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
@@ -161,6 +166,10 @@ func validateTagNumber(tagNumber int, track track) error {
 	return nil
 }
 
+func (l *realLibrary) Manipulator() audio.Manipulator {
+	return l.manipulator
+}
+
 func (l *realLibrary) Tracks() ([]track, error) {
 	libFile, err := l.readLibraryFile()
 	if err != nil {
@@ -260,6 +269,18 @@ func (l *realLibrary) DeleteTrack(trackNumber int) error {
 	return err
 }
 
+func validateTimeOffset(offset *time.Duration, length time.Duration) error {
+	if offset == nil {
+		return nil
+	} else if *offset < 0 {
+		return errors.New("cannot have a negative time offset")
+	} else if *offset > length {
+		return fmt.Errorf("time offset %v was longer than the track length %v", *offset, length)
+	} else {
+		return nil
+	}
+}
+
 func (l *realLibrary) AddTag(trackNumber int, tag string) error {
 	tag = strings.ToLower(tag)
 	if !isValidTag(tag) {
@@ -308,4 +329,84 @@ func (l *realLibrary) DeleteTag(trackNumber int, tagNumber int) error {
 		return err
 	}
 	return nil
+}
+
+func (l *realLibrary) TrimTrack(trackNumber int, start *time.Duration, end *time.Duration) error {
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return err
+	}
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return err
+	}
+	trackIndex := trackNumberToIndex(trackNumber)
+	if start == nil && end == nil { // end early after validating the track number if we are not making any changes
+		return nil
+	}
+	track := &libFile.Tracks[trackIndex]
+	f, err := os.Open(track.Path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	streamer, format, err := wav.Decode(f)
+	if err != nil {
+		return err
+	}
+	defer streamer.Close()
+	duration := format.SampleRate.D(streamer.Len())
+
+	// FIXME: Need to validate provided start and end times against each other and against existing start and end times
+	err = validateTimeOffset(start, duration)
+	if err != nil {
+		return fmt.Errorf("invalid start time: %v", err)
+	}
+	err = validateTimeOffset(end, duration)
+	if err != nil {
+		return fmt.Errorf("invalid end time: %v", err)
+	}
+
+	if track.Trim != nil {
+		if start != nil {
+			track.Trim.Start = start
+		}
+		if end != nil {
+			track.Trim.End = end
+		}
+	} else {
+		track.Trim = &trackTrim{
+			Start: start,
+			End:   end,
+		}
+	}
+
+	return l.writeLibraryFile(*libFile)
+}
+
+func (l *realLibrary) ClearTrim(trackNumber int, keepStart, keepEnd bool) error {
+	libFile, err := l.readLibraryFile()
+	if err != nil {
+		return err
+	}
+	err = validateTrackNumber(trackNumber, *libFile)
+	if err != nil {
+		return err
+	}
+	trackIndex := trackNumberToIndex(trackNumber)
+	track := &libFile.Tracks[trackIndex]
+	if !keepEnd && !keepStart {
+		track.Trim = nil
+	} else if track.Trim != nil {
+		if !keepStart {
+			track.Trim.Start = nil
+		}
+		if !keepEnd {
+			track.Trim.End = nil
+		}
+		if track.Trim.Start == nil && track.Trim.End == nil {
+			track.Trim = nil
+		}
+	}
+	return l.writeLibraryFile(*libFile)
 }

@@ -12,7 +12,18 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
+)
+
+const (
+	startTimeFlag      = "start"
+	startTimeFlagShort = "s"
+	endTimeFlag        = "end"
+	endTimeFlagShort   = "e"
+
+	keepStartFlag = "keepStart"
+	keepEndFlag   = "keepEnd"
 )
 
 func extractTrackNumberArgument(ctx *grumble.Context) (int, error) {
@@ -45,6 +56,35 @@ func addTrack(app *grumble.App, library *library.Library) {
 		Run:       nil,
 		Completer: nil,
 	}
+
+	trackCommand.AddCommand(&grumble.Command{
+		Name:      "info",
+		Help:      "show information for a track",
+		Usage:     "track info [track-number]",
+		AllowArgs: true,
+		Run: func(c *grumble.Context) error {
+			trackNumber, err := extractTrackNumberArgument(c)
+			if err != nil {
+				return err
+			}
+			track, err := (*library).GetTrack(trackNumber)
+			if err != nil {
+				return err
+			}
+			output := fmt.Sprintf("Name:\t%s\nPath:\t%s\n", track.Name, track.Path)
+			output += "Tags:\t[" + strings.Join(track.Tags, ", ") + "]\n"
+			trim := track.Trim
+			output += "Trim:\t"
+			if trim != nil {
+				output += fmt.Sprintf("start: %v\tend: %v\n", trim.Start, trim.End)
+			} else {
+				output += "None\n"
+			}
+			app.Printf(output)
+			return nil
+		},
+		Completer: nil,
+	})
 
 	trackCommand.AddCommand(&grumble.Command{
 		Name:      "list-tags",
@@ -106,6 +146,71 @@ func addTrack(app *grumble.App, library *library.Library) {
 			}
 			err = (*library).DeleteTag(trackNumber, tagNumber)
 			return err
+		},
+		Completer: nil,
+	})
+
+	trackCommand.AddCommand(&grumble.Command{
+		Name: "trim",
+		Help: "trim a track's start and end times",
+		Usage: "track trim --start [start-seconds] --end [end-seconds] [track-number] \n" +
+			"or:\ttrack trim --start [start-seconds] [track-number] \n" +
+			"or:\ttrack trim --end [end-seconds] [track-number]",
+		Flags: func(f *grumble.Flags) {
+			f.Duration(startTimeFlagShort, startTimeFlag, -1, "the start time in seconds. "+
+				"Negative values indicate the start of the track")
+			f.Duration(endTimeFlagShort, endTimeFlag, -1, "the end time in seconds. "+
+				"Negative values indicate the end of the track")
+		},
+		AllowArgs: true,
+		Run: func(c *grumble.Context) error {
+			trackNumber, err := extractTrackNumberArgument(c)
+			if err != nil {
+				return err
+			}
+			startInput := c.Flags.Duration(startTimeFlag)
+			endInput := c.Flags.Duration(endTimeFlag)
+
+			var startTime *time.Duration
+			var endTime *time.Duration
+
+			if startInput < 0 {
+				startTime = nil
+			} else {
+				startTime = &startInput
+			}
+
+			if endInput < 0 {
+				endTime = nil
+			} else {
+				endTime = &endInput
+			}
+
+			if startTime == nil && endTime == nil {
+				return errors.New("either a start time or an end time or both must be provided\n" +
+					"use track clear-trim to reset trim settings")
+			}
+
+			return (*library).TrimTrack(trackNumber, startTime, endTime)
+		},
+		Completer: nil,
+	})
+
+	trackCommand.AddCommand(&grumble.Command{
+		Name:      "clear-trim",
+		Help:      "erase trim settings for a track",
+		Usage:     "track clear-trim [track-number]",
+		AllowArgs: true,
+		Flags: func(f *grumble.Flags) {
+			f.BoolL(keepStartFlag, false, "preserve the start offset")
+			f.BoolL(keepEndFlag, false, "preserve the end offset")
+		},
+		Run: func(c *grumble.Context) error {
+			trackNumber, err := extractTrackNumberArgument(c)
+			if err != nil {
+				return err
+			}
+			return (*library).ClearTrim(trackNumber, c.Flags.Bool(keepStartFlag), c.Flags.Bool(keepEndFlag))
 		},
 		Completer: nil,
 	})

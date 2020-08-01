@@ -14,8 +14,23 @@ func Load(trackNumber int, destination string, library *library.Library) error {
 	if err != nil {
 		return err
 	}
-	err = util.CopyFile(track.Path, destination)
-	return err
+	if track.NeedsModification() {
+		var start *float64
+		var end *float64
+		if track.Trim != nil {
+			if track.Trim.Start != nil {
+				r := track.Trim.Start.Seconds()
+				start = &r
+			}
+			if track.Trim.End != nil {
+				r := track.Trim.End.Seconds()
+				end = &r
+			}
+		}
+		return (*library).Manipulator().ApplyTransformations(track.Path, destination, start, end)
+	} else {
+		return util.CopyFile(track.Path, destination)
+	}
 }
 
 func Start(userdataDir string, relayKey string, stop chan bool, destination string, library *library.Library) error {
