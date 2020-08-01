@@ -59,7 +59,7 @@ func (f *ffmpegAudioManipulator) ConvertToWav(inputPath string, outputPath strin
 		audioChannels, "1",
 		audioCodec, pcmS16le,
 		outputPath,
-		)
+	)
 	output, err := exec.Command(f.ffmpegPath, args...).CombinedOutput()
 	outputString := string(output)
 	if err != nil {

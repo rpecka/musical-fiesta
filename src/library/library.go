@@ -39,7 +39,7 @@ type Library interface {
 	AddTag(trackNumber int, tag string) error
 	DeleteTag(trackNumber int, tagNumber int) error
 	TrimTrack(trackNumber int, start *time.Duration, end *time.Duration) error
-	ClearTrim(trackNumber int) error
+	ClearTrim(trackNumber int, keepStart, keepEnd bool) error
 }
 
 func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
@@ -382,7 +382,7 @@ func (l *realLibrary) TrimTrack(trackNumber int, start *time.Duration, end *time
 	return l.writeLibraryFile(*libFile)
 }
 
-func (l *realLibrary) ClearTrim(trackNumber int) error {
+func (l *realLibrary) ClearTrim(trackNumber int, keepStart, keepEnd bool) error {
 	libFile, err := l.readLibraryFile()
 	if err != nil {
 		return err
@@ -393,6 +393,18 @@ func (l *realLibrary) ClearTrim(trackNumber int) error {
 	}
 	trackIndex := trackNumberToIndex(trackNumber)
 	track := &libFile.Tracks[trackIndex]
-	track.Trim = nil
+	if !keepEnd && !keepStart {
+		track.Trim = nil
+	} else if track.Trim != nil {
+		if !keepStart {
+			track.Trim.Start = nil
+		}
+		if !keepEnd {
+			track.Trim.End = nil
+		}
+		if track.Trim.Start == nil && track.Trim.End == nil {
+			track.Trim = nil
+		}
+	}
 	return l.writeLibraryFile(*libFile)
 }

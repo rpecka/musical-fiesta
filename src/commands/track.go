@@ -21,6 +21,9 @@ const (
 	startTimeFlagShort = "s"
 	endTimeFlag        = "end"
 	endTimeFlagShort   = "e"
+
+	keepStartFlag = "keepStart"
+	keepEndFlag   = "keepEnd"
 )
 
 func extractTrackNumberArgument(ctx *grumble.Context) (int, error) {
@@ -198,12 +201,16 @@ func addTrack(app *grumble.App, library *library.Library) {
 		Help:      "erase trim settings for a track",
 		Usage:     "track clear-trim [track-number]",
 		AllowArgs: true,
+		Flags: func(f *grumble.Flags) {
+			f.BoolL(keepStartFlag, false, "preserve the start offset")
+			f.BoolL(keepEndFlag, false, "preserve the end offset")
+		},
 		Run: func(c *grumble.Context) error {
 			trackNumber, err := extractTrackNumberArgument(c)
 			if err != nil {
 				return err
 			}
-			return (*library).ClearTrim(trackNumber)
+			return (*library).ClearTrim(trackNumber, c.Flags.Bool(keepStartFlag), c.Flags.Bool(keepEndFlag))
 		},
 		Completer: nil,
 	})
