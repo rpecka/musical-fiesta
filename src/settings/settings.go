@@ -92,6 +92,44 @@ func promptForKeyDefault(printer Printer, reader *bufio.Reader, prompt string, d
 	}
 }
 
+func promptForPathSetting(printer Printer, reader *bufio.Reader, prompt string, setting *string, pathHandler func (*string) error) error {
+	path, err := promptForPath(printer, reader, prompt)
+	if err != nil {
+		return err
+	}
+	if pathHandler != nil {
+		err = pathHandler(&path)
+		if err != nil {
+			return err
+		}
+	}
+	setting = &path
+	return nil
+}
+
+func promptForPathSettingDefault(printer Printer, reader *bufio.Reader, prompt string, defaultValue string, setting *string, pathHandler func (*string) error) error {
+	path, err := promptForPathDefault(printer, reader, prompt, defaultValue)
+	if err != nil {
+		return err
+	}
+	if pathHandler != nil {
+		err = pathHandler(&path)
+		if err != nil {
+			return err
+		}
+	}
+	setting = &path
+	return nil
+}
+
+func promptForKeySettingDefault(printer Printer, reader *bufio.Reader, prompt string, defaultValue string, setting *string) error {
+	key, err := promptForKeyDefault(printer, reader, prompt, defaultValue)
+	if err != nil {
+		return err
+	}
+	setting = &key
+}
+
 func InitializeSettings(printer Printer) (Settings, error) {
 	if !util.Exists(settingsDirPath) {
 		err := os.Mkdir(settingsDirPath, 0755)
@@ -116,74 +154,60 @@ func InitializeSettings(printer Printer) (Settings, error) {
 	}
 
 	reader := bufio.NewReader(os.Stdin)
+	madeChange := false
 	if settingsFile.LibraryPath == nil {
-		path, err := promptForPath(printer, reader, "Please provide the path where your library will be created: ")
-		if err != nil {
-			return nil, err
-		}
-		libraryPath := filepath.Join(path, libraryDirName)
-		fmt.Println("Your library will be created at: " + libraryPath)
-		err = os.MkdirAll(libraryPath, 0755)
-		if err != nil {
-			return nil, err
-		}
-		settingsFile.LibraryPath = &libraryPath
-		err = settings.writeSettings(settingsFile)
+		madeChange = true
+		err = promptForPathSetting(printer, reader, "Please provide the path where your library will be created: ", settingsFile.LibraryPath, func(path *string) error {
+			*path = filepath.Join(*path, libraryDirName)
+			fmt.Println("Your library will be created at: " + *path)
+			return os.MkdirAll(*path, 0755)
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if settingsFile.UserdataDir == nil {
+		madeChange = true
 		defaultDir := defaults.DefaultUserdataDir()
-		userdataPath, err := promptForPathDefault(printer, reader, "Please provide the path to your Steam userdata directory. "+
-			"Press return to use the default ("+defaultDir+"): ", defaultDir)
-		if err != nil {
-			return nil, err
-		}
-		settingsFile.UserdataDir = &userdataPath
-		err = settings.writeSettings(settingsFile)
+		err = promptForPathSettingDefault(printer, reader, "Please provide the path to your Steam userdata directory. "+
+			"Press return to use the default ("+defaultDir+"): ", defaultDir, settingsFile.UserdataDir, nil)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if settingsFile.CSGODir == nil {
+		madeChange = true
 		defaultDir := defaults.DefaultCSGODir()
-		path, err := promptForPathDefault(printer, reader, "Please provide the path to your CSGO game files directory. Press return to use the default "+
-			"("+defaultDir+"): ", defaultDir)
-		if err != nil {
-			return nil, err
-		}
-		settingsFile.CSGODir = &path
-		err = settings.writeSettings(settingsFile)
+		err = promptForPathSettingDefault(printer, reader, "Please provide the path to your CSGO game files directory. Press return to use the default "+
+			"("+defaultDir+"): ", defaultDir, settingsFile.CSGODir, nil)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if settingsFile.TrackRelayKey == nil {
+		madeChange = true
 		defaultKey := defaults.DefaultTrackRelayKey
-		key, err := promptForKeyDefault(printer, reader, "Please enter the bind code for a key you do not use in CSGO. Press return to use the default "+
-			"("+defaultKey+"): ", defaultKey)
-		if err != nil {
-			return nil, err
-		}
-		settingsFile.OffsetRelayKey = &key
-		err = settings.writeSettings(settingsFile)
+		err = promptForKeySettingDefault(printer, reader, "Please enter the bind code for a key you do not use in CSGO. Press return to use the default "+
+			"("+defaultKey+"): ", defaultKey, settingsFile.TrackRelayKey)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if settingsFile.OffsetRelayKey == nil {
+		madeChange = true
 		defaultKey := defaults.DefaultOffsetRelayKey
-		key, err := promptForKeyDefault(printer, reader, "Please enter the bind code for a key you do not use in CSGO. Press return to use the default "+
-			"("+defaultKey+"): ", defaultKey)
+		err = promptForKeySettingDefault(printer, reader, "Please enter the bind code for a key you do not use in CSGO. Press return to use the default "+
+			"("+defaultKey+"): ", defaultKey, settingsFile.OffsetRelayKey)
 		if err != nil {
 			return nil, err
 		}
-		settingsFile.OffsetRelayKey = &key
+	}
+
+	if madeChange {
 		err = settings.writeSettings(settingsFile)
 		if err != nil {
 			return nil, err
