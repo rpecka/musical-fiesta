@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fiesta/src/library"
-	"fiesta/src/loader"
 	"fmt"
 	"github.com/desertbit/grumble"
 	"github.com/faiface/beep/speaker"
@@ -226,7 +225,7 @@ func addTrack(app *grumble.App, library library.Library) {
 				return err
 			}
 			destination := filepath.Join(os.TempDir(), "test-track.wav")
-			err = loader.Load(trackNumber, nil, destination, library)
+			err = library.Load(trackNumber, nil, destination)
 			if err != nil {
 				return err
 			}

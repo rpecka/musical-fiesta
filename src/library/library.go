@@ -30,7 +30,6 @@ type libraryFile struct {
 }
 
 type Library interface {
-	Manipulator() audio.Manipulator
 	Tracks() ([]track, error)
 	GetTrack(trackNumber int) (*track, error)
 	Import(trackPath string) error
@@ -40,6 +39,7 @@ type Library interface {
 	DeleteTag(trackNumber int, tagNumber int) error
 	TrimTrack(trackNumber int, start *time.Duration, end *time.Duration) error
 	ClearTrim(trackNumber int, keepStart, keepEnd bool) error
+	Load(trackNumber int, offset *int, destination string) error
 }
 
 func InitializeLibrary(libraryDir string, manipulator audio.Manipulator) (Library, error) {
@@ -164,10 +164,6 @@ func validateTagNumber(tagNumber int, track track) error {
 		return fmt.Errorf("track number is out of bounds: %d", len(track.Tags))
 	}
 	return nil
-}
-
-func (l *realLibrary) Manipulator() audio.Manipulator {
-	return l.manipulator
 }
 
 func (l *realLibrary) Tracks() ([]track, error) {
@@ -409,4 +405,22 @@ func (l *realLibrary) ClearTrim(trackNumber int, keepStart, keepEnd bool) error 
 		}
 	}
 	return l.writeLibraryFile(*libFile)
+}
+
+func (l *realLibrary) Load(trackNumber int, offset *int, destination string) error {
+	track, err := l.GetTrack(trackNumber)
+	if err != nil {
+		return err
+	}
+
+	start, end, err := track.resolveStartEnd(offset)
+	if err != nil {
+		return err
+	}
+
+	if start == nil && end == nil {
+		return util.CopyFile(track.Path, destination)
+	} else {
+		return l.manipulator.ApplyTransformations(track.Path, destination, start, end)
+	}
 }
