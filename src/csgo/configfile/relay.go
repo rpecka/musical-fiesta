@@ -23,6 +23,7 @@ type ParseResult struct {
 	ResultType  int
 	TrackNumber int
 	Tag         string
+	Offset      *int
 }
 
 func makeLoadNumberResult(trackNumber int) *ParseResult {
@@ -39,7 +40,7 @@ func makeTagResult(tag string) *ParseResult {
 	}
 }
 
-func Parse(relayFilePath string, relayKey string) (*ParseResult, error) {
+func Parse(relayFilePath string, trackRelayKey, offsetRelayKey string) (*ParseResult, error) {
 	f, err := os.Open(relayFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open relay file at: %v because: %v", relayFilePath, err)
@@ -53,20 +54,39 @@ func Parse(relayFilePath string, relayKey string) (*ParseResult, error) {
 		return nil, fmt.Errorf("failed to decode iso8859_1 bytes to utf-8 because: %v", err)
 	}
 	utfString := string(utfBytes)
-	regex := bindCommandRegex(relayKey)
+	regex := bindCommandRegex(trackRelayKey)
 	matches := regex.FindStringSubmatch(utfString)
 	if matches == nil || len(matches) < 2 {
 		return nil, errors.New("could not find matching bind command in relay file")
 	}
 	command := matches[1]
 	integer, err := strconv.Atoi(command)
+	var result *ParseResult
 	if err != nil {
-		return makeTagResult(command), nil
+		result = makeTagResult(command)
 	} else {
-		return makeLoadNumberResult(integer), nil
+		result = makeLoadNumberResult(integer)
+	}
+
+	offsetRegex := bindCommandRegex(offsetRelayKey)
+	offsetMatches := offsetRegex.FindStringSubmatch(utfString)
+	if offsetMatches == nil || len(offsetMatches) < 2 {
+		return nil, errors.New("could not find matching bind command in relay file")
+	}
+	offsetString := offsetMatches[1]
+	integerOffset, err := strconv.Atoi(offsetString)
+	if err != nil {
+		return result, nil
+	} else {
+		result.Offset = &integerOffset
+		return result, nil
 	}
 }
 
 func bindCommandRegex(relayKey string) *regexp.Regexp {
 	return regexp.MustCompile("bind \"" + relayKey + "\" \"(.+)\"")
+}
+
+func offsetBindCommandRegex(relayKey string) *regexp.Regexp {
+	return regexp.MustCompile("bind \"" + relayKey + "\" \"(.+)%\"")
 }

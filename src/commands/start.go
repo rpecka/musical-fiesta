@@ -46,17 +46,21 @@ func addStart(app *grumble.App, settings settings.Settings, library library.Libr
 			if err != nil {
 				return err
 			}
+			offsetRelayKey, err := settings.OffsetRelayKey()
+			if err != nil {
+				return err
+			}
 			enumeratedTracks, err := enumerateTracks(library)
 			if err != nil {
 				return err
 			}
 			cfgPath := csgo.PathToCFG(csgoDir)
-			err = configfile.WriteConfigFiles(cfgPath, "z", trackRelayKey, enumeratedTracks)
+			err = configfile.WriteConfigFiles(cfgPath, "z", trackRelayKey, offsetRelayKey, enumeratedTracks)
 			if err != nil {
 				return err
 			}
 			destination := filepath.Join(csgoDir, csgo.VoiceInputFileName)
-			err = loader.Start(userdataDir, trackRelayKey, stop, destination, &library)
+			err = loader.Start(userdataDir, trackRelayKey, offsetRelayKey, stop, destination, library)
 			if err != nil {
 				return err
 			}
