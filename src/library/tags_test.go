@@ -29,7 +29,7 @@ func TestIsValidTag(t *testing.T) {
 }
 
 func TestGenerateTagsFromFilename(t *testing.T) {
-	files := map[string]map[string]bool {
+	files := map[string]map[string]bool{
 		"DROP IT [Dubstep] Sporty O HitDrop-Mix": map[string]bool{
 			"it": true, "[dubstep]": true, "sporty": true, "o": true, "hitdrop-mix": true,
 		},

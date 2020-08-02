@@ -38,10 +38,10 @@ type realSettings struct {
 }
 
 type settingsFile struct {
-	LibraryPath *string `json:"libraryPath,omitempty"`
-	UserdataDir *string `json:"userdataDir,omitempty"`
-	CSGODir     *string `json:"CSGODir,omitempty"`
-	TrackRelayKey *string `json:"trackRelayKey,omitempty"`
+	LibraryPath    *string `json:"libraryPath,omitempty"`
+	UserdataDir    *string `json:"userdataDir,omitempty"`
+	CSGODir        *string `json:"CSGODir,omitempty"`
+	TrackRelayKey  *string `json:"trackRelayKey,omitempty"`
 	OffsetRelayKey *string `json:"offsetRelayKey,omitempty"`
 }
 

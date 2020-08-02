@@ -1,8 +1,8 @@
 package defaults
 
 const (
-	DefaultTrackRelayKey = "="
-	DefaultOffsetRelayKey = "ins"  // insert key
+	DefaultTrackRelayKey  = "="
+	DefaultOffsetRelayKey = "ins" // insert key
 )
 
 func DefaultUserdataDir() string {

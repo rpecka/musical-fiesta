@@ -20,12 +20,12 @@ const (
 	listTracksAliasLA     = "la"
 
 	// Audio Controls
-	toggleCommand = "fiesta_toggle"
-	playCommand   = "fiesta_play"
-	stopCommand   = "fiesta_stop"
-	firstQuarterCommand = "q1"
+	toggleCommand        = "fiesta_toggle"
+	playCommand          = "fiesta_play"
+	stopCommand          = "fiesta_stop"
+	firstQuarterCommand  = "q1"
 	secondQuarterCommand = "q2"
-	thirdQuarterCommand = "q3"
+	thirdQuarterCommand  = "q3"
 
 	// CFG Updates
 	updateCommand = "fiesta_updatecfg"
@@ -123,7 +123,7 @@ func WriteConfigFiles(rootDir string, playKey string, trackRelayKey, offsetRelay
 	}
 	_ = writer.writeAlias(toggleCommand, playCommand)
 	_ = writer.writeAlias(playCommand, chainCommands([]string{
-		makeUnbindCommand(offsetRelayKey),                    // Clear out any offsets
+		makeUnbindCommand(offsetRelayKey),            // Clear out any offsets
 		makeAliasCommand(toggleCommand, stopCommand), // Set the toggle to stop
 		makeVoiceInputFromFile(true),                 // Start pointing voice input to a file
 		makeVoiceLoopBack(true),                      // Loop voice back to the user so they can hear too
@@ -134,7 +134,7 @@ func WriteConfigFiles(rootDir string, playKey string, trackRelayKey, offsetRelay
 		makeVoiceInputFromFile(false),                // Stop redirecting file to voice output
 		makeVoiceLoopBack(false),                     // Stop playing the user's voice output back to them
 		makeAliasCommand(toggleCommand, playCommand), // Set the toggle start again
-		makeUnbindCommand(offsetRelayKey),                    // Clear out any offsets
+		makeUnbindCommand(offsetRelayKey),            // Clear out any offsets
 	}))
 	_ = writer.writeBind(playKey, toggleCommand)
 	_ = writer.writeAlias(firstQuarterCommand, makeBindCommand(offsetRelayKey, "25%"))

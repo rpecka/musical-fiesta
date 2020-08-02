@@ -23,6 +23,9 @@ const (
 
 	keepStartFlag = "keepStart"
 	keepEndFlag   = "keepEnd"
+
+	offsetFlag      = "offset"
+	offsetFlagShort = "o"
 )
 
 func extractTrackNumberArgument(ctx *grumble.Context) (int, error) {
@@ -153,8 +156,8 @@ func addTrack(app *grumble.App, library library.Library) {
 		Name: "trim",
 		Help: "trim a track's start and end times",
 		Usage: "track trim --start [start-seconds] --end [end-seconds] [track-number] \n" +
-			"or:\ttrack trim --start [start-seconds] [track-number] \n" +
-			"or:\ttrack trim --end [end-seconds] [track-number]",
+			"\tor: track trim --start [start-seconds] [track-number] \n" +
+			"\tor: track trim --end [end-seconds] [track-number]",
 		Flags: func(f *grumble.Flags) {
 			f.Duration(startTimeFlagShort, startTimeFlag, -1, "the start time in seconds. "+
 				"Negative values indicate the start of the track")
@@ -215,9 +218,13 @@ func addTrack(app *grumble.App, library library.Library) {
 	})
 
 	trackCommand.AddCommand(&grumble.Command{
-		Name:      "test",
-		Help:      "listen to a track to make sure that the volume and trimming is correct",
-		Usage:     "track test [track-number]",
+		Name: "test",
+		Help: "listen to a track to make sure that the volume and trimming is correct",
+		Usage: "track test [track-number]\n" +
+			"\tor: track test -o [offset-percent] [track-number]",
+		Flags: func(f *grumble.Flags) {
+			f.Int(offsetFlagShort, offsetFlag, 0, "the offset to test with. Non-positive values will be ignored")
+		},
 		AllowArgs: true,
 		Run: func(c *grumble.Context) error {
 			trackNumber, err := extractTrackNumberArgument(c)
@@ -225,7 +232,14 @@ func addTrack(app *grumble.App, library library.Library) {
 				return err
 			}
 			destination := filepath.Join(os.TempDir(), "test-track.wav")
-			err = library.Load(trackNumber, nil, destination)
+			var offset *int
+			offsetInput := c.Flags.Int(offsetFlag)
+			if offsetInput <= 0 {
+				offset = nil
+			} else {
+				offset = &offsetInput
+			}
+			err = library.Load(trackNumber, offset, destination)
 			if err != nil {
 				return err
 			}

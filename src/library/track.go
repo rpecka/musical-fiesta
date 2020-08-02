@@ -33,7 +33,7 @@ func (t track) resolveStartEnd(offset *int) (start, end *float64, err error) {
 		percent := float64(*offset) / 100.0
 		if end != nil {
 			if start != nil {
-				*start = (*end - *start) * percent + *start
+				*start = (*end-*start)*percent + *start
 			} else {
 				offsetStart := *end * percent
 				start = &offsetStart
@@ -50,7 +50,7 @@ func (t track) resolveStartEnd(offset *int) (start, end *float64, err error) {
 			}
 			duration := format.SampleRate.D(streamer.Len())
 			if start != nil {
-				*start = (duration.Seconds() - *start) * percent + *start
+				*start = (duration.Seconds()-*start)*percent + *start
 			} else {
 				offsetStart := duration.Seconds() * percent
 				start = &offsetStart
