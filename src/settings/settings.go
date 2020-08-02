@@ -92,8 +92,8 @@ func promptForKeyDefault(printer Printer, reader *bufio.Reader, prompt string, d
 	}
 }
 
-func promptForPathSetting(printer Printer, reader *bufio.Reader, prompt string, setting *string, pathHandler func (*string) error) error {
-	path, err := promptForPath(printer, reader, prompt)
+func executePromptForPathSetting(promptLogic func() (string, error), setting *string, pathHandler func (*string) error) error {
+	path, err := promptLogic()
 	if err != nil {
 		return err
 	}
@@ -107,19 +107,16 @@ func promptForPathSetting(printer Printer, reader *bufio.Reader, prompt string, 
 	return nil
 }
 
+func promptForPathSetting(printer Printer, reader *bufio.Reader, prompt string, setting *string, pathHandler func (*string) error) error {
+	return executePromptForPathSetting(func() (string, error) {
+		return promptForPath(printer, reader, prompt)
+	}, setting, pathHandler)
+}
+
 func promptForPathSettingDefault(printer Printer, reader *bufio.Reader, prompt string, defaultValue string, setting *string, pathHandler func (*string) error) error {
-	path, err := promptForPathDefault(printer, reader, prompt, defaultValue)
-	if err != nil {
-		return err
-	}
-	if pathHandler != nil {
-		err = pathHandler(&path)
-		if err != nil {
-			return err
-		}
-	}
-	setting = &path
-	return nil
+	return executePromptForPathSetting(func() (string, error) {
+		return promptForPathDefault(printer, reader, prompt, defaultValue)
+	}, setting, pathHandler)
 }
 
 func promptForKeySettingDefault(printer Printer, reader *bufio.Reader, prompt string, defaultValue string, setting *string) error {
@@ -128,6 +125,7 @@ func promptForKeySettingDefault(printer Printer, reader *bufio.Reader, prompt st
 		return err
 	}
 	setting = &key
+	return nil
 }
 
 func InitializeSettings(printer Printer) (Settings, error) {
