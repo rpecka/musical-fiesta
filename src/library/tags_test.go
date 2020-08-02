@@ -1,6 +1,9 @@
 package library
 
-import "testing"
+import (
+	"fiesta/src/csgo/configfile"
+	"testing"
+)
 
 func TestIsValidTag(t *testing.T) {
 	invalid := []string{
@@ -9,6 +12,7 @@ func TestIsValidTag(t *testing.T) {
 		"reload",
 		"1",
 	}
+	invalid = append(invalid, configfile.Commands()...)
 
 	valid := []string{
 		"hi",
@@ -29,7 +33,7 @@ func TestIsValidTag(t *testing.T) {
 }
 
 func TestGenerateTagsFromFilename(t *testing.T) {
-	files := map[string]map[string]bool {
+	files := map[string]map[string]bool{
 		"DROP IT [Dubstep] Sporty O HitDrop-Mix": map[string]bool{
 			"it": true, "[dubstep]": true, "sporty": true, "o": true, "hitdrop-mix": true,
 		},

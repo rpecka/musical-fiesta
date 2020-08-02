@@ -22,6 +22,10 @@ func makeBindCommand(bindKey, command string) string {
 	return fmt.Sprintf("bind %s %s", bindKey, command)
 }
 
+func makeUnbindCommand(bindKey string) string {
+	return fmt.Sprintf("unbind %s", bindKey)
+}
+
 func makeEcho(s string) string {
 	return fmt.Sprintf("echo %s", s)
 }

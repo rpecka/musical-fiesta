@@ -1,6 +1,6 @@
 // +build linux
 
-package crossplatform
+package defaults
 
 import (
 	"fiesta/src/util"

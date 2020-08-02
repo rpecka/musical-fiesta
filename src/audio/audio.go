@@ -1,7 +1,7 @@
 package audio
 
 import (
-	"fiesta/src/crossplatform"
+	"fiesta/src/defaults"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -30,7 +30,7 @@ type ffmpegAudioManipulator struct {
 }
 
 func InitializeAudioManipulator() (Manipulator, error) {
-	findCommand := crossplatform.WhichCommand
+	findCommand := defaults.WhichCommand
 	output, err := exec.Command(findCommand, ffmpegExecutableName).Output()
 	if err != nil {
 		return nil, err

@@ -98,7 +98,7 @@ func main() {
 		},
 	})
 
-	commands.SetUpCommands(app, &config, &lib)
+	commands.SetUpCommands(app, config, lib)
 
 	grumble.Main(app)
 }

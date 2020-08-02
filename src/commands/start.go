@@ -26,7 +26,7 @@ func enumerateTracks(l library.Library) ([]configfile.EnumeratedTrack, error) {
 	return enumeratedTracks, nil
 }
 
-func addStart(app *grumble.App, settings *settings.Settings, library *library.Library) {
+func addStart(app *grumble.App, settings settings.Settings, library library.Library) {
 	app.AddCommand(&grumble.Command{
 		Name:      "start",
 		Help:      "start listening for commands from CSGO",
@@ -34,25 +34,33 @@ func addStart(app *grumble.App, settings *settings.Settings, library *library.Li
 		AllowArgs: false,
 		Run: func(c *grumble.Context) error {
 			stop := make(chan bool)
-			userdataDir, err := (*settings).UserdataDirPath()
+			userdataDir, err := settings.UserdataDirPath()
 			if err != nil {
 				return err
 			}
-			csgoDir, err := (*settings).CSGODirPath()
+			csgoDir, err := settings.CSGODirPath()
 			if err != nil {
 				return err
 			}
-			enumeratedTracks, err := enumerateTracks(*library)
+			trackRelayKey, err := settings.TrackRelayKey()
+			if err != nil {
+				return err
+			}
+			offsetRelayKey, err := settings.OffsetRelayKey()
+			if err != nil {
+				return err
+			}
+			enumeratedTracks, err := enumerateTracks(library)
 			if err != nil {
 				return err
 			}
 			cfgPath := csgo.PathToCFG(csgoDir)
-			err = configfile.WriteConfigFiles(cfgPath, "z", "=", enumeratedTracks)
+			err = configfile.WriteConfigFiles(cfgPath, "z", trackRelayKey, offsetRelayKey, enumeratedTracks)
 			if err != nil {
 				return err
 			}
 			destination := filepath.Join(csgoDir, csgo.VoiceInputFileName)
-			err = loader.Start(userdataDir, "=", stop, destination, library)
+			err = loader.Start(userdataDir, trackRelayKey, offsetRelayKey, stop, destination, library)
 			if err != nil {
 				return err
 			}

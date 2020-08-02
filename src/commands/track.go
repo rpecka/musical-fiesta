@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fiesta/src/library"
-	"fiesta/src/loader"
 	"fmt"
 	"github.com/desertbit/grumble"
 	"github.com/faiface/beep/speaker"
@@ -24,6 +23,9 @@ const (
 
 	keepStartFlag = "keepStart"
 	keepEndFlag   = "keepEnd"
+
+	offsetFlag      = "offset"
+	offsetFlagShort = "o"
 )
 
 func extractTrackNumberArgument(ctx *grumble.Context) (int, error) {
@@ -47,7 +49,7 @@ func listTags(app *grumble.App, name string, tags []string) {
 	app.Printf(output)
 }
 
-func addTrack(app *grumble.App, library *library.Library) {
+func addTrack(app *grumble.App, library library.Library) {
 	trackCommand := grumble.Command{
 		Name:      "track",
 		Help:      "commands associated with manipulating tracks",
@@ -67,7 +69,7 @@ func addTrack(app *grumble.App, library *library.Library) {
 			if err != nil {
 				return err
 			}
-			track, err := (*library).GetTrack(trackNumber)
+			track, err := library.GetTrack(trackNumber)
 			if err != nil {
 				return err
 			}
@@ -96,7 +98,7 @@ func addTrack(app *grumble.App, library *library.Library) {
 			if err != nil {
 				return err
 			}
-			track, err := (*library).GetTrack(trackNumber)
+			track, err := library.GetTrack(trackNumber)
 			if err != nil {
 				return fmt.Errorf("failed to get track: %v", err)
 			}
@@ -120,7 +122,7 @@ func addTrack(app *grumble.App, library *library.Library) {
 				return errors.New("incorrect number of arguments provided")
 			}
 			tagString := c.Args[0]
-			err = (*library).AddTag(trackNumber, tagString)
+			err = library.AddTag(trackNumber, tagString)
 			return err
 		},
 		Completer: nil,
@@ -144,7 +146,7 @@ func addTrack(app *grumble.App, library *library.Library) {
 			if err != nil {
 				return errors.New("tag number must be a number")
 			}
-			err = (*library).DeleteTag(trackNumber, tagNumber)
+			err = library.DeleteTag(trackNumber, tagNumber)
 			return err
 		},
 		Completer: nil,
@@ -154,8 +156,8 @@ func addTrack(app *grumble.App, library *library.Library) {
 		Name: "trim",
 		Help: "trim a track's start and end times",
 		Usage: "track trim --start [start-seconds] --end [end-seconds] [track-number] \n" +
-			"or:\ttrack trim --start [start-seconds] [track-number] \n" +
-			"or:\ttrack trim --end [end-seconds] [track-number]",
+			"\tor: track trim --start [start-seconds] [track-number] \n" +
+			"\tor: track trim --end [end-seconds] [track-number]",
 		Flags: func(f *grumble.Flags) {
 			f.Duration(startTimeFlagShort, startTimeFlag, -1, "the start time in seconds. "+
 				"Negative values indicate the start of the track")
@@ -191,7 +193,7 @@ func addTrack(app *grumble.App, library *library.Library) {
 					"use track clear-trim to reset trim settings")
 			}
 
-			return (*library).TrimTrack(trackNumber, startTime, endTime)
+			return library.TrimTrack(trackNumber, startTime, endTime)
 		},
 		Completer: nil,
 	})
@@ -210,15 +212,19 @@ func addTrack(app *grumble.App, library *library.Library) {
 			if err != nil {
 				return err
 			}
-			return (*library).ClearTrim(trackNumber, c.Flags.Bool(keepStartFlag), c.Flags.Bool(keepEndFlag))
+			return library.ClearTrim(trackNumber, c.Flags.Bool(keepStartFlag), c.Flags.Bool(keepEndFlag))
 		},
 		Completer: nil,
 	})
 
 	trackCommand.AddCommand(&grumble.Command{
-		Name:      "test",
-		Help:      "listen to a track to make sure that the volume and trimming is correct",
-		Usage:     "track test [track-number]",
+		Name: "test",
+		Help: "listen to a track to make sure that the volume and trimming is correct",
+		Usage: "track test [track-number]\n" +
+			"\tor: track test -o [offset-percent] [track-number]",
+		Flags: func(f *grumble.Flags) {
+			f.Int(offsetFlagShort, offsetFlag, 0, "the offset to test with. Non-positive values will be ignored")
+		},
 		AllowArgs: true,
 		Run: func(c *grumble.Context) error {
 			trackNumber, err := extractTrackNumberArgument(c)
@@ -226,7 +232,14 @@ func addTrack(app *grumble.App, library *library.Library) {
 				return err
 			}
 			destination := filepath.Join(os.TempDir(), "test-track.wav")
-			err = loader.Load(trackNumber, destination, library)
+			var offset *int
+			offsetInput := c.Flags.Int(offsetFlag)
+			if offsetInput <= 0 {
+				offset = nil
+			} else {
+				offset = &offsetInput
+			}
+			err = library.Load(trackNumber, offset, destination)
 			if err != nil {
 				return err
 			}
