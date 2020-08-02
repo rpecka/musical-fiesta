@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	testTrackKey = "="
+	testTrackKey  = "="
 	testOffsetKey = "ins"
 )
 
 func TestParse(t *testing.T) {
 	ten := 10
-	cases := map[string]*ParseResult {
+	cases := map[string]*ParseResult{
 		fmt.Sprintf("bind \"%s\" \"10\"", testTrackKey): &ParseResult{
 			TrackNumber: 10,
 		},
@@ -21,7 +21,7 @@ func TestParse(t *testing.T) {
 			Offset:      &ten,
 		},
 		fmt.Sprintf("bind \"%s\" \"10%%\"", testOffsetKey): nil,
-		"": nil,
+		"":                 nil,
 		"bind \"3\" \"4\"": nil,
 	}
 

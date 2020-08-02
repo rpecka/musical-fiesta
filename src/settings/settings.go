@@ -6,11 +6,9 @@ import (
 	"fiesta/src/defaults"
 	"fiesta/src/util"
 	"fmt"
-	"github.com/mitchellh/go-homedir"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 const (
@@ -32,6 +30,10 @@ type Settings interface {
 	OffsetRelayKey() (string, error)
 }
 
+type Printer interface {
+	Printf(format string, args ...interface{}) (int, error)
+}
+
 // Settings : Object to manage the configuration for the app
 type realSettings struct {
 	path string
@@ -45,7 +47,7 @@ type settingsFile struct {
 	OffsetRelayKey *string `json:"offsetRelayKey,omitempty"`
 }
 
-func InitializeSettings() (Settings, error) {
+func InitializeSettings(printer Printer) (Settings, error) {
 	if !util.Exists(settingsDirPath) {
 		err := os.Mkdir(settingsDirPath, 0755)
 		if err != nil {
@@ -68,107 +70,47 @@ func InitializeSettings() (Settings, error) {
 		return nil, err
 	}
 
-	if settingsFile.LibraryPath == nil {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Please provide the path where your library will be created: ")
-		path, err := reader.ReadString('\n')
-		if err != nil {
-			return nil, err
-		}
-		cleanPath := strings.TrimSpace(path)
-		libraryPath, _ := homedir.Expand(filepath.Join(cleanPath, libraryDirName))
-		fmt.Println("Your library will be created at: " + libraryPath)
-		err = os.MkdirAll(libraryPath, 0755)
-		if err != nil {
-			return nil, err
-		}
-		settingsFile.LibraryPath = &libraryPath
-		err = settings.writeSettings(settingsFile)
-		if err != nil {
-			return nil, err
-		}
+	reader := bufio.NewReader(os.Stdin)
+	needsWrite := false
+
+	err = promptForPathSettingIfNeeded(printer, reader, "Please provide the path where your library will be created: ", settingsFile.LibraryPath, func(path *string) error {
+		*path = filepath.Join(*path, libraryDirName)
+		fmt.Println("Your library will be created at: " + *path)
+		return os.MkdirAll(*path, 0755)
+	}, &needsWrite)
+	if err != nil {
+		return nil, err
 	}
 
-	if settingsFile.UserdataDir == nil {
-		reader := bufio.NewReader(os.Stdin)
-		defaultDir := defaults.DefaultUserdataDir()
-		fmt.Print("Please provide the path to your Steam userdata directory. Press return to use the default " +
-			"(" + defaultDir + "): ")
-		path, err := reader.ReadString('\n')
-		if err != nil {
-			return nil, err
-		}
-		cleanPath := strings.TrimSpace(path)
-		userdataPath, _ := homedir.Expand(cleanPath)
-		if userdataPath == "" {
-			settingsFile.UserdataDir = &defaultDir
-		} else {
-			settingsFile.UserdataDir = &userdataPath
-		}
-		err = settings.writeSettings(settingsFile)
-		if err != nil {
-			return nil, err
-		}
+	defaultUserdataDir := defaults.DefaultUserdataDir()
+	err = promptForPathSettingDefaultIfNeeded(printer, reader, "Please provide the path to your Steam userdata directory. "+
+		"Press return to use the default ("+defaultUserdataDir+"): ", defaultUserdataDir, settingsFile.UserdataDir, nil, &needsWrite)
+	if err != nil {
+		return nil, err
 	}
 
-	if settingsFile.CSGODir == nil {
-		reader := bufio.NewReader(os.Stdin)
-		defaultDir := defaults.DefaultCSGODir()
-		fmt.Print("Please provide the path to your CSGO game files directory. Press return to use the default " +
-			"(" + defaultDir + "): ")
-		path, err := reader.ReadString('\n')
-		if err != nil {
-			return nil, err
-		}
-		cleanPath := strings.TrimSpace(path)
-		csgoPath, _ := homedir.Expand(cleanPath)
-		if csgoPath == "" {
-			settingsFile.CSGODir = &defaultDir
-		} else {
-			settingsFile.CSGODir = &csgoPath
-		}
-		err = settings.writeSettings(settingsFile)
-		if err != nil {
-			return nil, err
-		}
+	defaultCSGODir := defaults.DefaultCSGODir()
+	err = promptForPathSettingDefaultIfNeeded(printer, reader, "Please provide the path to your CSGO game files directory. Press return to use the default "+
+		"("+defaultCSGODir+"): ", defaultCSGODir, settingsFile.CSGODir, nil, &needsWrite)
+	if err != nil {
+		return nil, err
 	}
 
-	if settingsFile.TrackRelayKey == nil {
-		reader := bufio.NewReader(os.Stdin)
-		defaultKey := defaults.DefaultTrackRelayKey
-		fmt.Print("Please enter the bind code for a key you do not use in CSGO. Press return to use the default " +
-			"(" + defaultKey + "): ")
-		key, err := reader.ReadString('\n')
-		if err != nil {
-			return nil, err
-		}
-		cleanKey := strings.TrimSpace(key)
-		if cleanKey == "" {
-			settingsFile.TrackRelayKey = &defaultKey
-		} else {
-			settingsFile.OffsetRelayKey = &cleanKey
-		}
-		err = settings.writeSettings(settingsFile)
-		if err != nil {
-			return nil, err
-		}
+	defaultTrackRelayKey := defaults.DefaultTrackRelayKey
+	err = promptForKeySettingDefaultIfNeeded(printer, reader, "Please enter the bind code for a key you do not use in CSGO. Press return to use the default "+
+		"("+defaultTrackRelayKey+"): ", defaultTrackRelayKey, settingsFile.TrackRelayKey, &needsWrite)
+	if err != nil {
+		return nil, err
 	}
 
-	if settingsFile.OffsetRelayKey == nil {
-		reader := bufio.NewReader(os.Stdin)
-		defaultKey := defaults.DefaultOffsetRelayKey
-		fmt.Print("Please enter the bind code for a key you do not use in CSGO. Press return to use the default " +
-			"(" + defaultKey + "): ")
-		key, err := reader.ReadString('\n')
-		if err != nil {
-			return nil, err
-		}
-		cleanKey := strings.TrimSpace(key)
-		if cleanKey == "" {
-			settingsFile.OffsetRelayKey = &defaultKey
-		} else {
-			settingsFile.OffsetRelayKey = &cleanKey
-		}
+	defaultKey := defaults.DefaultOffsetRelayKey
+	err = promptForKeySettingDefaultIfNeeded(printer, reader, "Please enter the bind code for a key you do not use in CSGO. Press return to use the default "+
+		"("+defaultKey+"): ", defaultKey, settingsFile.OffsetRelayKey, &needsWrite)
+	if err != nil {
+		return nil, err
+	}
+
+	if needsWrite {
 		err = settings.writeSettings(settingsFile)
 		if err != nil {
 			return nil, err
@@ -186,7 +128,10 @@ func (s realSettings) parseSettings() (*settingsFile, error) {
 	defer file.Close()
 	byteValue, err := ioutil.ReadAll(file)
 	var settingsFile settingsFile
-	json.Unmarshal(byteValue, &settingsFile)
+	err = json.Unmarshal(byteValue, &settingsFile)
+	if err != nil {
+		return nil, err
+	}
 	return &settingsFile, nil
 }
 
