@@ -26,7 +26,7 @@ func main() {
 		},
 	})
 
-	config, err := settings.InitializeSettings()
+	config, err := settings.InitializeSettings(app)
 	if err != nil {
 		panic(err)
 	}

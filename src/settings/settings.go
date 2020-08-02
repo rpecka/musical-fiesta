@@ -32,6 +32,10 @@ type Settings interface {
 	OffsetRelayKey() (string, error)
 }
 
+type Printer interface {
+	Printf(format string, args ...interface{}) (int, error)
+}
+
 // Settings : Object to manage the configuration for the app
 type realSettings struct {
 	path string
@@ -45,7 +49,50 @@ type settingsFile struct {
 	OffsetRelayKey *string `json:"offsetRelayKey,omitempty"`
 }
 
-func InitializeSettings() (Settings, error) {
+func promptForInput(printer Printer, reader *bufio.Reader, prompt string) (string, error) {
+	printer.Printf(prompt)
+	return reader.ReadString('\n')
+}
+
+func promptForPath(printer Printer, reader *bufio.Reader, prompt string) (string, error) {
+	path, err := promptForInput(printer, reader, prompt)
+	if err != nil {
+		return "", err
+	}
+	trimmedPath := strings.TrimSpace(path)
+	expandedPath, err := homedir.Expand(trimmedPath)
+	if err != nil {
+		return "", err
+	}
+	return expandedPath, nil
+}
+
+func promptForPathDefault(printer Printer, reader *bufio.Reader, prompt string, defaultValue string) (string, error) {
+	path, err := promptForPath(printer, reader, prompt)
+	if err != nil {
+		return "", err
+	}
+	if path == "" {
+		return defaultValue, nil
+	} else {
+		return path, nil
+	}
+}
+
+func promptForKeyDefault(printer Printer, reader *bufio.Reader, prompt string, defaultValue string) (string, error) {
+	input, err := promptForInput(printer, reader, prompt)
+	input = strings.TrimSpace(input)
+	if err != nil {
+		return "", err
+	}
+	if input == "" {
+		return defaultValue, nil
+	} else {
+		return input, nil
+	}
+}
+
+func InitializeSettings(printer Printer) (Settings, error) {
 	if !util.Exists(settingsDirPath) {
 		err := os.Mkdir(settingsDirPath, 0755)
 		if err != nil {
@@ -68,15 +115,13 @@ func InitializeSettings() (Settings, error) {
 		return nil, err
 	}
 
+	reader := bufio.NewReader(os.Stdin)
 	if settingsFile.LibraryPath == nil {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Please provide the path where your library will be created: ")
-		path, err := reader.ReadString('\n')
+		path, err := promptForPath(printer, reader, "Please provide the path where your library will be created: ")
 		if err != nil {
 			return nil, err
 		}
-		cleanPath := strings.TrimSpace(path)
-		libraryPath, _ := homedir.Expand(filepath.Join(cleanPath, libraryDirName))
+		libraryPath := filepath.Join(path, libraryDirName)
 		fmt.Println("Your library will be created at: " + libraryPath)
 		err = os.MkdirAll(libraryPath, 0755)
 		if err != nil {
@@ -90,21 +135,13 @@ func InitializeSettings() (Settings, error) {
 	}
 
 	if settingsFile.UserdataDir == nil {
-		reader := bufio.NewReader(os.Stdin)
 		defaultDir := defaults.DefaultUserdataDir()
-		fmt.Print("Please provide the path to your Steam userdata directory. Press return to use the default " +
-			"(" + defaultDir + "): ")
-		path, err := reader.ReadString('\n')
+		userdataPath, err := promptForPathDefault(printer, reader, "Please provide the path to your Steam userdata directory. "+
+			"Press return to use the default ("+defaultDir+"): ", defaultDir)
 		if err != nil {
 			return nil, err
 		}
-		cleanPath := strings.TrimSpace(path)
-		userdataPath, _ := homedir.Expand(cleanPath)
-		if userdataPath == "" {
-			settingsFile.UserdataDir = &defaultDir
-		} else {
-			settingsFile.UserdataDir = &userdataPath
-		}
+		settingsFile.UserdataDir = &userdataPath
 		err = settings.writeSettings(settingsFile)
 		if err != nil {
 			return nil, err
@@ -112,21 +149,13 @@ func InitializeSettings() (Settings, error) {
 	}
 
 	if settingsFile.CSGODir == nil {
-		reader := bufio.NewReader(os.Stdin)
 		defaultDir := defaults.DefaultCSGODir()
-		fmt.Print("Please provide the path to your CSGO game files directory. Press return to use the default " +
-			"(" + defaultDir + "): ")
-		path, err := reader.ReadString('\n')
+		path, err := promptForPathDefault(printer, reader, "Please provide the path to your CSGO game files directory. Press return to use the default "+
+			"("+defaultDir+"): ", defaultDir)
 		if err != nil {
 			return nil, err
 		}
-		cleanPath := strings.TrimSpace(path)
-		csgoPath, _ := homedir.Expand(cleanPath)
-		if csgoPath == "" {
-			settingsFile.CSGODir = &defaultDir
-		} else {
-			settingsFile.CSGODir = &csgoPath
-		}
+		settingsFile.CSGODir = &path
 		err = settings.writeSettings(settingsFile)
 		if err != nil {
 			return nil, err
@@ -134,20 +163,13 @@ func InitializeSettings() (Settings, error) {
 	}
 
 	if settingsFile.TrackRelayKey == nil {
-		reader := bufio.NewReader(os.Stdin)
 		defaultKey := defaults.DefaultTrackRelayKey
-		fmt.Print("Please enter the bind code for a key you do not use in CSGO. Press return to use the default " +
-			"(" + defaultKey + "): ")
-		key, err := reader.ReadString('\n')
+		key, err := promptForKeyDefault(printer, reader, "Please enter the bind code for a key you do not use in CSGO. Press return to use the default "+
+			"("+defaultKey+"): ", defaultKey)
 		if err != nil {
 			return nil, err
 		}
-		cleanKey := strings.TrimSpace(key)
-		if cleanKey == "" {
-			settingsFile.TrackRelayKey = &defaultKey
-		} else {
-			settingsFile.OffsetRelayKey = &cleanKey
-		}
+		settingsFile.OffsetRelayKey = &key
 		err = settings.writeSettings(settingsFile)
 		if err != nil {
 			return nil, err
@@ -155,20 +177,13 @@ func InitializeSettings() (Settings, error) {
 	}
 
 	if settingsFile.OffsetRelayKey == nil {
-		reader := bufio.NewReader(os.Stdin)
 		defaultKey := defaults.DefaultOffsetRelayKey
-		fmt.Print("Please enter the bind code for a key you do not use in CSGO. Press return to use the default " +
-			"(" + defaultKey + "): ")
-		key, err := reader.ReadString('\n')
+		key, err := promptForKeyDefault(printer, reader, "Please enter the bind code for a key you do not use in CSGO. Press return to use the default "+
+			"("+defaultKey+"): ", defaultKey)
 		if err != nil {
 			return nil, err
 		}
-		cleanKey := strings.TrimSpace(key)
-		if cleanKey == "" {
-			settingsFile.OffsetRelayKey = &defaultKey
-		} else {
-			settingsFile.OffsetRelayKey = &cleanKey
-		}
+		settingsFile.OffsetRelayKey = &key
 		err = settings.writeSettings(settingsFile)
 		if err != nil {
 			return nil, err
@@ -186,7 +201,10 @@ func (s realSettings) parseSettings() (*settingsFile, error) {
 	defer file.Close()
 	byteValue, err := ioutil.ReadAll(file)
 	var settingsFile settingsFile
-	json.Unmarshal(byteValue, &settingsFile)
+	err = json.Unmarshal(byteValue, &settingsFile)
+	if err != nil {
+		return nil, err
+	}
 	return &settingsFile, nil
 }
 

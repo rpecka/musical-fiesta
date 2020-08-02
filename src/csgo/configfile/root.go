@@ -77,7 +77,7 @@ func generateTagGroups(tracks []EnumeratedTrack) (map[string]EnumeratedTrack, ma
 }
 
 func Commands() []string {
-	return []string {
+	return []string{
 		// Listing Tracks
 		listTracksCommand,
 		listTracksAliasList,
