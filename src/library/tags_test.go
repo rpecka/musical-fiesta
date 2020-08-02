@@ -1,6 +1,9 @@
 package library
 
-import "testing"
+import (
+	"fiesta/src/csgo/configfile"
+	"testing"
+)
 
 func TestIsValidTag(t *testing.T) {
 	invalid := []string{
@@ -9,6 +12,7 @@ func TestIsValidTag(t *testing.T) {
 		"reload",
 		"1",
 	}
+	invalid = append(invalid, configfile.Commands()...)
 
 	valid := []string{
 		"hi",

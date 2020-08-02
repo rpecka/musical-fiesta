@@ -76,6 +76,27 @@ func generateTagGroups(tracks []EnumeratedTrack) (map[string]EnumeratedTrack, ma
 	return singles, groups
 }
 
+func Commands() []string {
+	return []string {
+		// Listing Tracks
+		listTracksCommand,
+		listTracksAliasList,
+		listTracksAliasTracks,
+		listTracksAliasLA,
+
+		// Audio Controls
+		toggleCommand,
+		playCommand,
+		stopCommand,
+		firstQuarterCommand,
+		secondQuarterCommand,
+		thirdQuarterCommand,
+
+		// CFG Updates
+		updateCommand,
+	}
+}
+
 func WriteConfigFiles(rootDir string, playKey string, trackRelayKey, offsetRelayKey string, enumeratedTracks []EnumeratedTrack) error {
 	writer, err := newWriter(rootCFGPath(rootDir))
 	if err != nil {

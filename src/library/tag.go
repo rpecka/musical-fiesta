@@ -2,6 +2,7 @@ package library
 
 import (
 	"fiesta/src/csgo/commands"
+	"fiesta/src/csgo/configfile"
 	"fiesta/src/util"
 	"strconv"
 	"strings"
@@ -32,6 +33,9 @@ func isValidTag(tag string) bool {
 		return false
 	}
 	if commands.IsIllegal(tag) {
+		return false
+	}
+	if util.Contains(configfile.Commands(), tag) {
 		return false
 	}
 	if strings.ContainsAny(tag, unallowedChars) {
