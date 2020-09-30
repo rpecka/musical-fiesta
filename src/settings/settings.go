@@ -60,6 +60,7 @@ func InitializeSettings(printer Printer) (Settings, error) {
 		if err != nil {
 			return nil, err
 		}
+		file.WriteString("{}")
 		file.Close()
 	}
 
@@ -130,7 +131,7 @@ func (s realSettings) parseSettings() (*settingsFile, error) {
 	var settingsFile settingsFile
 	err = json.Unmarshal(byteValue, &settingsFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read settings file: %v", err)
 	}
 	return &settingsFile, nil
 }
