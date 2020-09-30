@@ -16,7 +16,7 @@ func addDeleteTrack(app *grumble.App, library library.Library) {
 		AllowArgs: true,
 		Run: func(c *grumble.Context) error {
 			if len(c.Args) != 1 {
-				return errors.New("incorrect number of arguments passed to delete: " + string(len(c.Args)))
+				return errors.New("incorrect number of arguments passed to delete: " + fmt.Sprint(len(c.Args)))
 			}
 			trackNumber, err := strconv.Atoi(c.Args[0])
 			if err != nil {
