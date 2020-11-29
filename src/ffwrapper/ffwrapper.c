@@ -95,7 +95,7 @@ static int open_input_file(const char *filename,
     }
 
     /* Set format the bitexact flag. */
-    (*input_format_context)->flags |= AVFMT_FLAG_BITEXACT
+    (*input_format_context)->flags |= AVFMT_FLAG_BITEXACT;
 
     /* Find a decoder for the audio stream. */
     if (!(input_codec = avcodec_find_decoder((*input_format_context)->streams[0]->codecpar->codec_id))) {
@@ -113,7 +113,7 @@ static int open_input_file(const char *filename,
     }
 
     /* Set the codec bitexact flag. */
-    avctx->flags |= AV_CODEC_FLAG_BITEXACT
+    avctx->flags |= AV_CODEC_FLAG_BITEXACT;
 
     /* Initialize the stream parameters with demuxer information. */
     error = avcodec_parameters_to_context(avctx, (*input_format_context)->streams[0]->codecpar);
@@ -187,7 +187,7 @@ static int open_output_file(const char *filename,
     }
 
     /* Set the output format bitexact flag */
-    (*output_format_context)->flags |= AVFMT_FLAG_BITEXACT
+    (*output_format_context)->flags |= AVFMT_FLAG_BITEXACT;
 
     /* Find the encoder to be used by its name. */
     if (!(output_codec = avcodec_find_encoder(AV_CODEC_ID_PCM_S16LE))) {
@@ -221,7 +221,7 @@ static int open_output_file(const char *filename,
     avctx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
 
     /* Set the encoder bitexact flag */
-    avctx->flags |= AV_CODEC_FLAG_BITEXACT
+    avctx->flags |= AV_CODEC_FLAG_BITEXACT;
 
     /* Set the sample rate for the container. */
     stream->time_base.den = OUTPUT_SAMPLE_RATE;
@@ -804,9 +804,12 @@ int transcode(char *input_path, char* output_path)
                         &input_codec_context))
         goto cleanup;
     /* Open the output file for writing. */
-    if (open_output_file(output_path, input_codec_context,
-                         &output_format_context, &output_codec_context))
+    if (open_output_file(output_path, &output_format_context,
+                         &output_codec_context))
         goto cleanup;
+
+    output_codec_context->frame_size = input_codec_context->frame_size;
+
     /* Initialize the resampler to be able to convert audio sample formats. */
     if (init_resampler(input_codec_context, output_codec_context,
                        &resample_context))

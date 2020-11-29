@@ -36,7 +36,7 @@ func main() {
 		panic(err)
 	}
 
-	manipulator, err := audio.InitializeCMDFFMPEGManipulator()
+	manipulator, err := audio.InitializeWrapperFFMPEGManipulator()
 	if err != nil {
 		panic(err)
 	}
