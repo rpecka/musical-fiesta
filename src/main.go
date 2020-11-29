@@ -36,10 +36,12 @@ func main() {
 		panic(err)
 	}
 
-	manipulator, err := audio.InitializeCMDFFMPEGManipulator()
-	if err != nil {
-		panic(err)
-	}
+	//manipulator, err := audio.InitializeCMDFFMPEGManipulator()
+	//if err != nil {
+	//	panic(err)
+	//}
+
+	manipulator := audio.InitializeLinkedFFMPEG()
 
 	lib, err := library.InitializeLibrary(libPath, manipulator)
 	if err != nil {
