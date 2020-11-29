@@ -18,35 +18,41 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/**
- * @file
- * Simple audio converter
- *
- * @example transcode_aac.c
- * Convert an input audio file to AAC in an MP4 container using FFmpeg.
- * Formats other than MP4 are supported based on the output file extension.
- * @author Andreas Unterweger (dustsigns@gmail.com)
+ /**
+  * @file
+  * Simple audio converter
+  *
+  * @example transcode_aac.c
+  * Convert an input audio file to AAC in an MP4 container using FFmpeg.
+  * Formats other than MP4 are supported based on the output file extension.
+  * @author Andreas Unterweger (dustsigns@gmail.com)
+  */
+
+ /*
+ * This is a modified version of transcode_aac.c from the examples directory of FFMPEG
  */
 
 #include <stdio.h>
 
-#include "libavformat/avformat.h"
-#include "libavformat/avio.h"
+#include <libavformat/avformat.h>
+#include <libavformat/avio.h>
 
-#include "libavcodec/avcodec.h"
+#include <libavcodec/avcodec.h>
 
-#include "libavutil/audio_fifo.h"
-#include "libavutil/avassert.h"
-#include "libavutil/avstring.h"
-#include "libavutil/frame.h"
-#include "libavutil/opt.h"
+#include <libavutil/audio_fifo.h>
+#include <libavutil/avassert.h>
+#include <libavutil/avstring.h>
+#include <libavutil/frame.h>
+#include <libavutil/opt.h>
 
-#include "libswresample/swresample.h"
+#include <libswresample/swresample.h>
 
 /* The output bit rate in bit/s */
 #define OUTPUT_BIT_RATE 96000
 /* The number of output channels */
-#define OUTPUT_CHANNELS 2
+#define OUTPUT_CHANNELS 1
+/* The output sample rate */
+#define OUTPUT_SAMPLE_RATE 22050
 
 /**
  * Open an input file and the required decoder.
@@ -88,6 +94,9 @@ static int open_input_file(const char *filename,
         return AVERROR_EXIT;
     }
 
+    /* Set format the bitexact flag. */
+    (*input_format_context)->flags |= AVFMT_FLAG_BITEXACT
+
     /* Find a decoder for the audio stream. */
     if (!(input_codec = avcodec_find_decoder((*input_format_context)->streams[0]->codecpar->codec_id))) {
         fprintf(stderr, "Could not find input codec\n");
@@ -102,6 +111,9 @@ static int open_input_file(const char *filename,
         avformat_close_input(input_format_context);
         return AVERROR(ENOMEM);
     }
+
+    /* Set the codec bitexact flag. */
+    avctx->flags |= AV_CODEC_FLAG_BITEXACT
 
     /* Initialize the stream parameters with demuxer information. */
     error = avcodec_parameters_to_context(avctx, (*input_format_context)->streams[0]->codecpar);
@@ -129,15 +141,12 @@ static int open_input_file(const char *filename,
 /**
  * Open an output file and the required encoder.
  * Also set some basic encoder parameters.
- * Some of these parameters are based on the input file's parameters.
  * @param      filename              File to be opened
- * @param      input_codec_context   Codec context of input file
  * @param[out] output_format_context Format context of output file
  * @param[out] output_codec_context  Codec context of output file
  * @return Error code (0 if successful)
  */
 static int open_output_file(const char *filename,
-                            AVCodecContext *input_codec_context,
                             AVFormatContext **output_format_context,
                             AVCodecContext **output_codec_context)
 {
@@ -177,9 +186,12 @@ static int open_output_file(const char *filename,
         goto cleanup;
     }
 
+    /* Set the output format bitexact flag */
+    (*output_format_context)->flags |= AVFMT_FLAG_BITEXACT
+
     /* Find the encoder to be used by its name. */
-    if (!(output_codec = avcodec_find_encoder(AV_CODEC_ID_AAC))) {
-        fprintf(stderr, "Could not find an AAC encoder.\n");
+    if (!(output_codec = avcodec_find_encoder(AV_CODEC_ID_PCM_S16LE))) {
+        fprintf(stderr, "Could not find a PCMS16LE encoder.\n");
         goto cleanup;
     }
 
@@ -201,15 +213,18 @@ static int open_output_file(const char *filename,
      * The input file's sample rate is used to avoid a sample rate conversion. */
     avctx->channels       = OUTPUT_CHANNELS;
     avctx->channel_layout = av_get_default_channel_layout(OUTPUT_CHANNELS);
-    avctx->sample_rate    = input_codec_context->sample_rate;
+    avctx->sample_rate    = OUTPUT_SAMPLE_RATE;
     avctx->sample_fmt     = output_codec->sample_fmts[0];
-    avctx->bit_rate       = OUTPUT_BIT_RATE;
+//    avctx->bit_rate       = OUTPUT_BIT_RATE;
 
     /* Allow the use of the experimental AAC encoder. */
     avctx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
 
+    /* Set the encoder bitexact flag */
+    avctx->flags |= AV_CODEC_FLAG_BITEXACT
+
     /* Set the sample rate for the container. */
-    stream->time_base.den = input_codec_context->sample_rate;
+    stream->time_base.den = OUTPUT_SAMPLE_RATE;
     stream->time_base.num = 1;
 
     /* Some container formats (like MP4) require global headers to be present.
@@ -308,7 +323,7 @@ static int init_resampler(AVCodecContext *input_codec_context,
         * not greater than the number of samples to be converted.
         * If the sample rates differ, this case has to be handled differently
         */
-        av_assert0(output_codec_context->sample_rate == input_codec_context->sample_rate);
+//        av_assert0(output_codec_context->sample_rate == input_codec_context->sample_rate);
 
         /* Open the resampler with the specified parameters. */
         if ((error = swr_init(*resample_context)) < 0) {
@@ -776,7 +791,7 @@ static int write_output_file_trailer(AVFormatContext *output_format_context)
     return 0;
 }
 
-int main(int argc, char **argv)
+int transcode(char *input_path, char* output_path)
 {
     AVFormatContext *input_format_context = NULL, *output_format_context = NULL;
     AVCodecContext *input_codec_context = NULL, *output_codec_context = NULL;
@@ -784,17 +799,12 @@ int main(int argc, char **argv)
     AVAudioFifo *fifo = NULL;
     int ret = AVERROR_EXIT;
 
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <input file> <output file>\n", argv[0]);
-        exit(1);
-    }
-
     /* Open the input file for reading. */
-    if (open_input_file(argv[1], &input_format_context,
+    if (open_input_file(input_path, &input_format_context,
                         &input_codec_context))
         goto cleanup;
     /* Open the output file for writing. */
-    if (open_output_file(argv[2], input_codec_context,
+    if (open_output_file(output_path, input_codec_context,
                          &output_format_context, &output_codec_context))
         goto cleanup;
     /* Initialize the resampler to be able to convert audio sample formats. */
