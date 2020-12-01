@@ -1,6 +1,6 @@
 package audio
 
-// #cgo LDFLAGS: -L${SRCDIR}/../ffwrapper -lffwrapper -lavformat -lavcodec -lavutil -lswresample
+// #cgo LDFLAGS: -L${SRCDIR}/../ffwrapper -L${SRCDIR}/../../../ffmpeg/lib -lffwrapper -lavformat -lavcodec -lavutil -lswresample -framework AudioToolbox -lbz2 -lz -llzma -framework VideoToolbox -framework CoreVideo -framework CoreMedia -framework CoreFoundation -liconv
 // #include <stdlib.h>
 // #include "../ffwrapper/ffwrapper.h"
 import "C"
