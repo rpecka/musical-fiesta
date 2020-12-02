@@ -1,6 +1,12 @@
 package audio
 
-// #cgo LDFLAGS: -L${SRCDIR}/../ffwrapper -L${SRCDIR}/../../../ffmpeg/lib -lffwrapper -lavformat -lavcodec -lavutil -lswresample -framework AudioToolbox -lbz2 -lz -llzma -framework VideoToolbox -framework CoreVideo -framework CoreMedia -framework CoreFoundation -liconv
+// Path to liblzma must be provided by environment variable i.e. CGO_LDFLAGS=/usr/local/Cellar/xz/5.2.5/lib/liblzma.a
+
+// #cgo LDFLAGS: -L${SRCDIR}/../ffwrapper -L${SRCDIR}/../../../ffmpeg/lib -lffwrapper
+// #cgo LDFLAGS: -lavformat -lavcodec -lavutil -lswresample
+// #cgo LDFLAGS: -lbz2 -lz -liconv
+// #cgo LDFLAGS: -framework CoreVideo -framework CoreMedia -framework CoreFoundation
+// #cgo LDFLAGS: -framework VideoToolbox -framework AudioToolbox
 // #include <stdlib.h>
 // #include "../ffwrapper/ffwrapper.h"
 import "C"
