@@ -22,9 +22,7 @@
 .idea/workspace.xml
 .idea/tasks.xml
 
-# C
-*.o
-*.a
-
 # Fiesta
 fiesta
+lib
+build

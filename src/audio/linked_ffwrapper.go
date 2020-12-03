@@ -1,8 +1,7 @@
 package audio
 
-// Path to liblzma must be provided by environment variable i.e. CGO_LDFLAGS=/usr/local/Cellar/xz/5.2.5/lib/liblzma.a
+// ffwrapper, ffmpeg, and lzma must be provided by CGO_LDFLAGS environment variable. See Makefile
 
-// #cgo LDFLAGS: -L${SRCDIR}/../ffwrapper -L${SRCDIR}/../../../ffmpeg/lib -lffwrapper
 // #cgo LDFLAGS: -lavformat -lavcodec -lavutil -lswresample
 // #cgo LDFLAGS: -lbz2 -lz -liconv
 // #cgo LDFLAGS: -framework CoreVideo -framework CoreMedia -framework CoreFoundation
