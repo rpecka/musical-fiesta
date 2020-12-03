@@ -25,3 +25,6 @@
 # C
 *.o
 *.a
+
+# Fiesta
+fiesta
