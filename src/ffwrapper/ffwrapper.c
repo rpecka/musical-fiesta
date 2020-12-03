@@ -667,9 +667,6 @@ static int init_output_frame(AVFrame **frame,
     return 0;
 }
 
-/* Global timestamp for the audio frames. */
-static int64_t pts = 0;
-
 /**
  * Encode one frame worth of audio to the output file.
  * @param      frame                 Samples to be encoded
@@ -677,12 +674,13 @@ static int64_t pts = 0;
  * @param      output_codec_context  Codec context of the output file
  * @param[out] data_present          Indicates whether data has been
  *                                   encoded
+ * @param[out] pts                   Timestamp for samples
  * @return Error code (0 if successful)
  */
 static int encode_audio_frame(AVFrame *frame,
                               AVFormatContext *output_format_context,
                               AVCodecContext *output_codec_context,
-                              int *data_present)
+                              int *data_present, int64_t *pts)
 {
     /* Packet used for temporary storage. */
     AVPacket output_packet;
@@ -691,8 +689,8 @@ static int encode_audio_frame(AVFrame *frame,
 
     /* Set a timestamp based on the sample rate for the container. */
     if (frame) {
-        frame->pts = pts;
-        pts += frame->nb_samples;
+        frame->pts = *pts;
+        *pts += frame->nb_samples;
     }
 
     /* Send the audio frame stored in the temporary packet to the encoder.
@@ -747,11 +745,12 @@ cleanup:
  * @param fifo                  Buffer used for temporary storage
  * @param output_format_context Format context of the output file
  * @param output_codec_context  Codec context of the output file
+ * @param pts[out]              Timestamp for samples
  * @return Error code (0 if successful)
  */
 static int load_encode_and_write(AVAudioFifo *fifo,
                                  AVFormatContext *output_format_context,
-                                 AVCodecContext *output_codec_context)
+                                 AVCodecContext *output_codec_context, int64_t *pts)
 {
     /* Temporary storage of the output samples of the frame written to the file. */
     AVFrame *output_frame;
@@ -776,7 +775,7 @@ static int load_encode_and_write(AVAudioFifo *fifo,
 
     /* Encode one frame worth of audio samples. */
     if (encode_audio_frame(output_frame, output_format_context,
-                           output_codec_context, &data_written)) {
+                           output_codec_context, &data_written, pts)) {
         av_frame_free(&output_frame);
         return AVERROR_EXIT;
     }
@@ -834,6 +833,8 @@ int transcode(char *input_path, char* output_path)
     if (write_output_file_header(output_format_context))
         goto cleanup;
 
+    int64_t pts = 0;
+
     /* Loop as long as we have input samples to read or output samples
      * to write; abort as soon as we have neither. */
     while (1) {
@@ -869,7 +870,7 @@ int transcode(char *input_path, char* output_path)
             /* Take one frame worth of audio samples from the FIFO buffer,
              * encode it and write it to the output file. */
             if (load_encode_and_write(fifo, output_format_context,
-                                      output_codec_context))
+                                      output_codec_context, &pts))
                 goto cleanup;
 
         /* If we are at the end of the input file and have encoded
@@ -880,7 +881,7 @@ int transcode(char *input_path, char* output_path)
             do {
                 data_written = 0;
                 if (encode_audio_frame(NULL, output_format_context,
-                                       output_codec_context, &data_written))
+                                       output_codec_context, &data_written, &pts))
                     goto cleanup;
             } while (data_written);
             break;
