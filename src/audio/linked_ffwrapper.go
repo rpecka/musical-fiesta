@@ -1,11 +1,7 @@
 package audio
 
-// ffwrapper, ffmpeg, and lzma must be provided by CGO_LDFLAGS environment variable. See Makefile
-
-// #cgo LDFLAGS: -lavformat -lavcodec -lavutil -lswresample
-// #cgo LDFLAGS: -lbz2 -lz -liconv
-// #cgo LDFLAGS: -framework CoreVideo -framework CoreMedia -framework CoreFoundation
-// #cgo LDFLAGS: -framework VideoToolbox -framework AudioToolbox
+// #cgo LDFLAGS: -L${SRCDIR}/../../lib -lffwrapper
+// #cgo pkg-config: libavformat libavcodec libavutil libswresample
 // #include <stdlib.h>
 // #include "../ffwrapper/ffwrapper.h"
 import "C"

@@ -12,37 +12,25 @@ Please note that I've only ever built this on my own machines and it's not unlik
 1. Install [`golang`](https://golang.org/dl/)
 2. Build FFmpeg
 	1. Clone FFmpeg https://github.com/FFmpeg/FFmpeg
-	2. Configure FFmpeg: `./configure --enable-static --disable-shared --disable-debug --disable-doc --disable-asm --disable-securetransport --prefix=$(pwd)`
-	3. Build and install FFmpeg: `make install`
-	4. ``export FFMPEG_INCLUDE_PATH=`pwd`/include"``
-	5. ``export FFMPEG_LIB_PATH=`pwd`/lib``
+	2. Check out version `n4.3.1`
+	3. Configure FFmpeg: `./configure --enable-static --disable-shared --disable-debug --disable-doc --disable-asm --disable-network --disable-securetransport --disable-programs --disable-avdevice --disable-swscale --disable-avfilter --prefix=$(pwd)`
+	4. Build and install FFmpeg: `make install`
+	5. ``export FFMPEG_INCLUDE_PATH=`pwd`/include"``
+	6. ``export FFMPEG_LIB_PATH="`pwd`/lib"``
 3. Install `xz`
 	1. `brew install xz`
 	2. Fiesta requires that the path to the static library liblzma.a be defined in the variable `LZMA_PATH` i.e. `export LZMA_PATH=/usr/local/Cellar/xz/5.2.5/lib/liblzma.a`
 4. Build fiesta using `make`
 
 ## Windows
-1. Install [`golang`](https://golang.org/dl/)
-2. Install [`ffmpeg`](https://ffmpeg.org/download.html)
-3. Ensure `ffmpeg` and go are both accessible from `cmd`. You can test this by running the following commands in `cmd`:
-```
-$: where go
-```
-and getting an output like:
-```
-C:\Go\bin\go.exe
-```
-and running
-```
-$: where ffmpeg
-```
-and getting an output like:
-```
-C:\Program Files (x86)\ffmepg\ffmpeg.exe
-```
-Note that the output does not need to be exactly the same, it only needs to not show an error.
-If either of these commands fail, you will need to add the directories where you installed those tools to your PATH environment variable. You can do this in Control Panel > System > Advanced System Settings > Environment Variables
+Building on Windows has only been tested with MSYS2 amd MinGW-w64, which you can get at http://msys2.github.io/
 
-4. Clone the git repository to your machine and navigate to it in cmd
-5. Run `go run src\main.go`
-6. Musical Fiesta will start automatically. To run again in the future, you can run the executable called `main` that you just created by double-clicking on it.
+1. Install `go`: `pacman -S mingw64/mingw-w64-x86_64-go`
+2. Build FFmpeg using the MinGW-w64 console
+	1. Install pkg-config: `pacman -S mingw64/mingw-w64-x86_64-pkg-config`
+	2. Clone FFmpeg https://github.com/FFmpeg/FFmpeg
+	3. Check out version `n4.3.1`
+	4. Configure FFmpeg: `./configure --pkg-config-flags=--static --enable-static --disable-shared --disable-debug --disable-doc --disable-asm --disable-network --disable-securetransport --disable-x86asm --disable-avdevice --disable-swscale --disable-avfilter --disable-programs --prefix=/mingw64/usr/local`
+	5. Build and install FFmpeg: `make install`
+	6. Ensure your `PKG_CONFIG_PATH` environment variable contains the directory with the FFmpeg .pc files. If you followed the configure instruction above, this is `/mingw64/usr/local/lib/pkgconfig`
+3. Build fiesta using `make`
