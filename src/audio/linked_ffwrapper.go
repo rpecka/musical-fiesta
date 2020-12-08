@@ -1,3 +1,5 @@
+// +build !dummy
+
 package audio
 
 // #cgo LDFLAGS: -L${SRCDIR}/../../lib -lffwrapper
@@ -14,11 +16,8 @@ type wrapperFFMPEG struct {
 
 }
 
-func InitializeWrapperFFMPEGManipulator() (Manipulator, error) {
-	audio := wrapperFFMPEG{
-
-	}
-	return &audio, nil
+func InitializeManipulator() (Manipulator, error) {
+	return &wrapperFFMPEG{}, nil
 }
 
 func (w *wrapperFFMPEG) ConvertToWav(inputPath string, outputPath string) error {

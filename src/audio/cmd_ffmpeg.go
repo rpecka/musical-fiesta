@@ -1,3 +1,5 @@
+// +build !dummy, cmd
+
 package audio
 
 import (
@@ -33,7 +35,7 @@ func makeBaseArgs(inputPath string) []string {
 	}
 }
 
-func InitializeCMDFFMPEGManipulator() (Manipulator, error) {
+func InitializeManipulator() (Manipulator, error) {
 	findCommand := defaults.WhichCommand
 	output, err := exec.Command(findCommand, ffmpegExecutableName).Output()
 	if err != nil {

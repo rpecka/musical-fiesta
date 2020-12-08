@@ -25,6 +25,8 @@ FFWRAPPER_CFLAGS=$(shell pkg-config --static --cflags libavformat)
 
 .DEFAULT_GOAL = main
 
+.PHONY: main test
+
 clean-libs:
 	rm -rf ${LIB_DIR}
 
@@ -51,3 +53,6 @@ ${LIB_DIR}:
 
 main: ${LIB_DIR}/libffwrapper.a ${GO_FILES}
 	CGO_LDFLAGS="${CGO_LDFLAGS}" go build -o ${FIESTA_EXECUTABLE_NAME} src/main.go
+
+test: ${GO_FILES}
+	go test -tags dummy ./...
