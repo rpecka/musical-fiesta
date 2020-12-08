@@ -19,17 +19,11 @@ ifeq (${OS},Windows_NT)
 	CGO_LDFLAGS+=-L/mingw64/usr/local/lib
 else
 	FIESTA_EXECUTABLE_NAME = ${FIESTA_BASE_NAME}
-
-	ifndef LZMA_PATH
-		$(error LZMA_PATH is not set. The full path to liblzma.a must be \
-			located at LZMA_PATH. Did you install xz?)
-	endif
-	CGO_LDFLAGS+=${LZMA_PATH}
 endif
 
 FFWRAPPER_CFLAGS=$(shell pkg-config --static --cflags libavformat)
 
-.DEFAULT_GOAL = ${FIESTA_EXECUTABLE_NAME}
+.DEFAULT_GOAL = main
 
 clean-libs:
 	rm -rf ${LIB_DIR}
@@ -55,5 +49,5 @@ ${BUILD_DIR}:
 ${LIB_DIR}:
 	mkdir -p ${LIB_DIR}
 
-${FIESTA_EXECUTABLE_NAME}: ${LIB_DIR}/libffwrapper.a ${GO_FILES}
+main: ${LIB_DIR}/libffwrapper.a ${GO_FILES}
 	CGO_LDFLAGS="${CGO_LDFLAGS}" go build -o ${FIESTA_EXECUTABLE_NAME} src/main.go
