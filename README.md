@@ -15,8 +15,7 @@ Please note that I've only ever built this on my own machines and it's not unlik
 	2. Check out version `n4.3.1`
 	3. Configure FFmpeg: `./configure --pkg-config-flags=--static --enable-static --disable-shared --disable-debug --disable-doc --disable-asm --disable-network --disable-securetransport --disable-programs --disable-avdevice --disable-swscale --disable-avfilter --prefix=$(pwd)`
 	4. Build and install FFmpeg: `make install`
-	5. ``export FFMPEG_INCLUDE_PATH=`pwd`/include"``
-	6. ``export FFMPEG_LIB_PATH="`pwd`/lib"``
+	5. Ensure your `PKG_CONFIG_PATH` environment variable contains the directory with the FFmpeg .pc files. If you followed the configure instruction above, this is `$(pwd)/lib/pkgconfig`
 3. Install `xz`
 	1. `brew install xz`
 	2. Fiesta requires that the path to xz's pkgconfig is in `PKG_CONFIG_PATH`
